@@ -1,6 +1,5 @@
 #include <fstream>
 #include <iomanip>
-#include <cmath>
 #include "matrix.h"
 
 //-----------------------------------------------------------------------------

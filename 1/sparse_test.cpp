@@ -38,8 +38,9 @@ TEST_CASE("Random matrixes") {
 	CHECK(testSolve(500, 3));
 	CHECK(testSolve(5000, 50));
 	CHECK(testSolve(50000, 50));
-	//CHECK(testSolve(500000, 50));
-	//CHECK(testSolve(5000000, 5));
+	CHECK(testSolve(500000, 50));
+	CHECK(testSolve(5000000, 5));
+	CHECK(testSolve(10000000, 5));
 
 	//system("pause");
 }

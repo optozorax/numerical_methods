@@ -341,16 +341,13 @@ void calcLDL(MatrixProfileSymmetric& a_l) {
 
 //-----------------------------------------------------------------------------
 void calcGaussianReverseOrder(const MatrixProfileSymmetric& a, Vector& y_x) {
-	// TODO сделать транспонирование, потому что обычное обращение работает слишком медленно
 	for (int i = y_x.size() - 1; i >= 0; --i) {
 		real sum = 0;
-		for (int j = i+1; j < y_x.size(); ++j) {
-			int jLineStart = a.getLineFirstElementPos(j);
-			int jLineSize = a.getLineSize(j);
-			if (i >= jLineStart)
-				sum += a.getLineElement(j, i - jLineStart) * y_x(j);
-		}
+		int iLineStart = a.getLineFirstElementPos(i);
+		int iLineSize = a.getLineSize(i);
 		y_x(i) = y_x(i) - sum;
+		for (int j = iLineStart; j < i; j++)
+			y_x(j) -= y_x(i) * a.getLineElement(i, j - iLineStart);
 	}
 }
 
