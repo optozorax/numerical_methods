@@ -260,8 +260,8 @@ bool mul(const MatrixProfileSymmetric& a, const Vector& x, Vector& y) {
 		int iLineStart = a.getLineFirstElementPos(i);
 		int iLineSize = a.getLineSize(i);
 
-		for (int k = 0; k < iLineSize; ++k) {
-			int j = iLineStart + k;
+		int j = iLineStart;
+		for (int k = 0; k < iLineSize; ++j, ++k) {
 			real elem = a.getLineElement(i, k);
 			y(i) += elem * x(j);
 			y(j) += elem * x(i);
@@ -331,6 +331,8 @@ void calcLDL(MatrixProfileSymmetric& a_l) {
 
 		// Считаем диагональный элемент
 		real sum = 0;
+
+		// TODO зансти в цикл выше
 		for (int j = 0; j < iLineSize; ++j)
 			sum += d(iLineStart + j) * 
 				   a_l.getLineElement(i, j) * 
