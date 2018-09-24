@@ -37,6 +37,9 @@ public:
 	real& getLineElement(int lineNo, int elemNo);
 	const real& getLineElement(int lineNo, int elemNo) const;
 
+	std::vector<real>::iterator getLineFirstElement(int lineNo);
+	std::vector<real>::const_iterator getLineFirstElement(int lineNo) const;
+
 private:
 	std::vector<real> di;
 	std::vector<real> al;
@@ -76,6 +79,8 @@ private:
 //-----------------------------------------------------------------------------
 bool mul(const MatrixProfileSymmetric& a, const Vector& x, Vector& y);
 bool sum(const Vector& a, const Vector& b, Vector& result);
+
+sumreal sumAllElementsAbs(const Matrix& a);
 
 void calcLDL(MatrixProfileSymmetric& a_l);
 

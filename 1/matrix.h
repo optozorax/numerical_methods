@@ -24,6 +24,7 @@ public:
 	bool isUpperTriangular(void) const;
 	bool isDiagonal(void) const;
 	bool isDiagonalIdentity(void) const;
+	bool isDegenerate(void) const;
 
 	real& operator()(int i, int j);
 	const real& operator()(int i, int j) const;
@@ -77,3 +78,5 @@ bool calcGaussianReverseOrder(const Matrix& l, const Matrix& y, Matrix& x);
 bool calcGaussianFrontOrder(const Matrix& l, const Matrix& y, Matrix& x);
 bool calcGaussianCentralOrder(const Matrix& d, const Matrix& y, Matrix& x);
 bool solveSLAE_by_LDL(const Matrix& a, const Matrix& y, Matrix& x);
+
+bool solevSLAE_byGaussMethod(const Matrix& a, const Matrix& y, Matrix& x);

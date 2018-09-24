@@ -3,19 +3,6 @@
 #include "matrix.h"
 
 //-----------------------------------------------------------------------------
-bool isNear(real a, real b) {
-	if (a != 0) {
-		if (fabs(a - b)/a > 0.0001)
-			return false;
-	} else {
-		if (fabs(b) > 0.0001)
-			return false;
-	}
-
-	return true;
-}
-
-//-----------------------------------------------------------------------------
 Matrix::Matrix(int n, int m, real fill) : m_matrix(m, std::vector<real>(n, fill)), m_n(n), m_m(m) {
 }
 
@@ -42,10 +29,12 @@ void Matrix::saveToFile(std::string fileName) const {
 
 	fout << m_n << '\t' << m_m << std::endl;
 
+	fout.precision(std::numeric_limits<real>::digits10 + 1);
+	int w = std::numeric_limits<real>::digits10 + 6;
+
 	for (int i = 0; i < height(); ++i) {
-		for (int j = 0; j < width(); ++j) {
-			fout << std::setprecision(3) << std::fixed << std::setw(7) << operator()(i, j) << '\t';
-		}
+		for (int j = 0; j < width(); ++j)
+			fout << std::setw(w) << operator()(i, j);
 		fout << std::endl;
 	}
 
@@ -54,11 +43,9 @@ void Matrix::saveToFile(std::string fileName) const {
 
 //-----------------------------------------------------------------------------
 void Matrix::getFromVector(int n, int m, const std::vector<real>& data) {
-	m_n = n;
-	m_m = m;
 	resize(n, m);
 	for (int i = 0; i < data.size(); ++i)
-		operator()(i % n, i / n) = data[i];
+		operator()(i / m, i % n) = data[i];
 }
 
 //-----------------------------------------------------------------------------
@@ -66,6 +53,7 @@ void Matrix::resize(int n, int m, real fill) {
 	if (m_n != n || m_m != m) {
 		m_n = n;
 		m_m = m;
+		m_matrix.clear();
 		m_matrix.resize(m_m, std::vector<real>(m_n, fill));
 	}
 }
@@ -103,7 +91,7 @@ bool Matrix::isLowerTriangular(void) const {
 
 	for (int i = 0; i < height(); ++i) {
 		for (int j = 0; j < i; ++j) {
-			if (operator()(j, i) != 0)
+			if (fabs(operator()(j, i)) > 0.000001)
 				return false;
 		}
 	}
@@ -152,6 +140,12 @@ bool Matrix::isDiagonalIdentity(void) const {
 	}
 	
 	return true;
+}
+
+//-----------------------------------------------------------------------------
+bool Matrix::isDegenerate(void) const {
+	// TODO
+	return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -234,7 +228,7 @@ void generateVector(int n, int min, int max, Matrix& result) {
 
 //-----------------------------------------------------------------------------
 bool mul(const Matrix& a, const Matrix& b, Matrix& result) {
-	// result = a * b
+	// result = rus_a * b
 	if (a.width() != b.height())
 		return false;
 
@@ -255,7 +249,7 @@ bool mul(const Matrix& a, const Matrix& b, Matrix& result) {
 
 //-----------------------------------------------------------------------------
 bool sum(const Matrix& a, const Matrix& b, Matrix& result) {
-	// result = a + b
+	// result = rus_a + b
 	if (a.width() != b.width() || a.height() != b.height())
 		return false;
 
@@ -272,7 +266,7 @@ bool sum(const Matrix& a, const Matrix& b, Matrix& result) {
 
 //-----------------------------------------------------------------------------
 bool transpose(Matrix& a) {
-	// a = a^T
+	// rus_a = rus_a^T
 	if (a.height() != a.width())
 		return false;
 
@@ -286,8 +280,20 @@ bool transpose(Matrix& a) {
 }
 
 //-----------------------------------------------------------------------------
+sumreal sumAllElementsAbs(const Matrix& a) {
+	sumreal sum = 0;
+	for (int i = 0; i < a.height(); ++i) {
+		for (int j = 0; j < a.width(); ++j) {
+			sum += fabs(a(i, j));
+		}
+	}
+
+	return sum;
+}
+
+//-----------------------------------------------------------------------------
 bool calcLDL(const Matrix& a, Matrix& l, Matrix& d) {
-	// l * d * l^T = a
+	// l * d * l^T = rus_a
 	if (!a.isSymmetric())
 		return false;
 
@@ -374,7 +380,10 @@ bool calcGaussianCentralOrder(const Matrix& d, const Matrix& y, Matrix& x) {
 
 //-----------------------------------------------------------------------------
 bool solveSLAE_by_LDL(const Matrix& a, const Matrix& y, Matrix& x) {
-	// a * x = y, a - симметричная матрица
+	// rus_a * x = y, rus_a - симметричная матрица
+	if (!(a.width() == a.height() && a.width() == y.height() && !a.isDegenerate()))
+		return false;
+
 	Matrix l, d, z, w;
 
 	if (!calcLDL(a, l, d))
@@ -388,6 +397,48 @@ bool solveSLAE_by_LDL(const Matrix& a, const Matrix& y, Matrix& x) {
 
 	if (!calcGaussianReverseOrder(l, w, x))
 		return false;
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+bool solevSLAE_byGaussMethod(const Matrix& a1, const Matrix& y1, Matrix& x1) {
+	if (!(a1.width() == a1.height() && y1.height() == a1.width() && !a1.isDegenerate()))
+		return false;
+
+	Matrix a(a1);
+	Matrix y(y1);
+
+	for (int i = 0; i < a.height(); ++i) {
+		// Находим максимальный элемент
+		int maxI = i;
+		for (int j = i+1; j < a.height(); ++j)
+			if (fabs(a(j, i)) > fabs(a(maxI, i)))
+				maxI = j;
+
+		// Переставляем эту строчку с текущей
+		for (int j = i; j < a.width(); ++j)
+			std::swap(a(i, j), a(maxI, j));
+		std::swap(y(i, 0), y(maxI, 0));
+
+		// Перебираем все строчки ниже и отнимаем текущую строчку от них
+		for (int j = i+1; j < a.height(); ++j) {
+			real m = a(j, i) / a(i, i);
+			for (int k = i; k < a.width(); ++k)
+				a(j, k) -= m * a(i, k);
+			y(j, 0) -= m * y(i, 0);
+		}
+
+		// Делим текущую строку на ее ведущий элемент, чтобы на диагонали были единицы
+		double m = a(i, i);
+		for (int j = i; j < a.width(); ++j)
+			a(i, j) /= m;
+		y(i, 0) /= m;
+	}
+
+	// Считаем обратный ход Гаусса
+	transpose(a);
+	calcGaussianReverseOrder(a, y, x1);
 
 	return true;
 }

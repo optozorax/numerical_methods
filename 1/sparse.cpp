@@ -55,19 +55,22 @@ void MatrixProfileSymmetric::loadFromFile(std::string fileName) {
 void MatrixProfileSymmetric::saveToFile(std::string fileName) const {
 	std::ofstream fout(fileName);
 
+	fout.precision(std::numeric_limits<real>::max_digits10);
+	int w = std::numeric_limits<real>::digits10 + 6;
+
 	fout << di.size() << std::endl;
 	for (const auto& i : di)
-		fout << i << "\t";
+		fout << std::setw(w) << i;
 	fout << std::endl;
 
 	fout << ai.size() << std::endl;
 	for (const auto& i : ai)
-		fout << i << "\t";
+		fout << std::setw(w) << i;
 	fout << std::endl;
 
 	fout << al.size() << std::endl;
 	for (const auto& i : al)
-		fout << i << "\t";
+		fout << std::setw(w) << i;
 	fout << std::endl;
 
 	fout.close();
@@ -145,6 +148,16 @@ real& MatrixProfileSymmetric::getLineElement(int lineNo, int elemNo) {
 //-----------------------------------------------------------------------------
 const real& MatrixProfileSymmetric::getLineElement(int lineNo, int elemNo) const {
 	return al[ai[lineNo] + elemNo];
+}
+
+//-----------------------------------------------------------------------------
+std::vector<real>::iterator MatrixProfileSymmetric::getLineFirstElement(int lineNo) {
+	return al.begin() + ai[lineNo];
+}
+
+//-----------------------------------------------------------------------------
+std::vector<real>::const_iterator MatrixProfileSymmetric::getLineFirstElement(int lineNo) const {
+	return al.begin() + ai[lineNo];
 }
 
 //-----------------------------------------------------------------------------
@@ -316,7 +329,7 @@ void calcLDL(MatrixProfileSymmetric& a_l) {
 
 			int count = end - offset;
 
-			real sum = 0;
+			sumreal sum = 0;
 			for (int k = 0; k < count; ++k)
 				sum += d(offset + k) * 
 					   a_l.getLineElement(j, k + jLineOffset) * 
@@ -330,7 +343,7 @@ void calcLDL(MatrixProfileSymmetric& a_l) {
 		}
 
 		// Считаем диагональный элемент
-		real sum = 0;
+		sumreal sum = 0;
 
 		// TODO зансти в цикл выше
 		for (int j = 0; j < iLineSize; ++j)
@@ -344,7 +357,7 @@ void calcLDL(MatrixProfileSymmetric& a_l) {
 //-----------------------------------------------------------------------------
 void calcGaussianReverseOrder(const MatrixProfileSymmetric& a, Vector& y_x) {
 	for (int i = y_x.size() - 1; i >= 0; --i) {
-		real sum = 0;
+		sumreal sum = 0;
 		int iLineStart = a.getLineFirstElementPos(i);
 		int iLineSize = a.getLineSize(i);
 		y_x(i) = y_x(i) - sum;
@@ -359,7 +372,7 @@ void calcGaussianFrontOrder(const MatrixProfileSymmetric& a, Vector& y_x) {
 		int iLineStart = a.getLineFirstElementPos(i);
 		int iLineSize = a.getLineSize(i);
 
-		real sum = 0;
+		sumreal sum = 0;
 		for (int j = 0; j < iLineSize; ++j)
 			sum += a.getLineElement(i, j) * y_x(iLineStart + j);
 		y_x(i) = y_x(i) - sum;

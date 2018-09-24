@@ -2,6 +2,19 @@
 #include "common.h"
 
 //-----------------------------------------------------------------------------
+bool isNear(real a, real b) {
+	if (a != 0) {
+		if (fabs(a - b)/a > 0.0001)
+			return false;
+	} else {
+		if (fabs(b) > 0.0001)
+			return false;
+	}
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
 double random(void) {
 	return std::rand() / double(RAND_MAX);
 }
