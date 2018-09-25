@@ -368,10 +368,8 @@ void calcLDL(MatrixProfileSymmetric& a_l) {
 //-----------------------------------------------------------------------------
 void calcGaussianReverseOrder(const MatrixProfileSymmetric& a, Vector& y_x) {
 	for (int i = y_x.size() - 1; i >= 0; --i) {
-		sumreal sum = 0;
 		int iLineStart = a.getLineFirstElementPos(i);
 		int iLineSize = a.getLineSize(i);
-		y_x(i) = y_x(i) - sum;
 		for (int j = iLineStart; j < i; j++)
 			y_x(j) -= y_x(i) * a.getLineElement(i, j - iLineStart);
 	}
