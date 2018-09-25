@@ -29,8 +29,8 @@ void Matrix::saveToFile(std::string fileName) const {
 
 	fout << m_n << '\t' << m_m << std::endl;
 
-	fout.precision(std::numeric_limits<real>::digits10 + 1);
-	int w = std::numeric_limits<real>::digits10 + 6;
+	fout.precision(std::numeric_limits<real>::digits10);
+	int w = std::numeric_limits<real>::digits10 + 4;
 
 	for (int i = 0; i < height(); ++i) {
 		for (int j = 0; j < width(); ++j)

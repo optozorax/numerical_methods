@@ -1,0 +1,17 @@
+Разложение LDL^T=A:
+\left\{\begin{aligned}
+&l_{km} = \frac{a_{km}-\sum\limits_{i=1}^{m-1} d_i l_{mi} l_{ki}}{d_m}, &&\begin{aligned}
+&k=\overline{2,n}, \\
+&m=\overline{1,k-1}
+\end{aligned}
+&d_k = a_{kk} - \sum\limits_{i=1}^{k-1} d_i l_{ki}^2, &&k=\overline{1,n}, \\
+\end{aligned}\right.
+
+Прямой ход:
+\left\{x_i = y_i - \sum\limits_{j=1}^{i-1} l_{ij} x_j,\qquad i=\overline{1,n}\right.
+
+Центральный ход:
+\left\{x_i = \frac{y_i}{d_i},\qquad i=\overline{1,n}\right.
+
+Обратный ход:
+\left\{x_i = y_i - \sum\limits_{j=i+1}^{n} l_{ji} x_j,\qquad i=\overline{n,1}\right.

@@ -213,7 +213,7 @@ void Vector::loadFromFile(std::string fileName) {
 //-----------------------------------------------------------------------------
 void Vector::saveToFile(std::string fileName) const {
 	std::ofstream fout(fileName);
-	fout.precision(std::numeric_limits<real>::max_digits10);
+	fout.precision(std::numeric_limits<real>::digits10);
 	fout << mas.size() << std::endl;
 	for (const auto& i : mas)
 		fout << i << std::endl;
