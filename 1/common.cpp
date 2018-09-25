@@ -2,7 +2,7 @@
 #include "common.h"
 
 //-----------------------------------------------------------------------------
-bool isNear(real a, real b) {
+bool isNear(double a, double b) {
 	if (a != 0) {
 		if (fabs(a - b)/a > 0.0001)
 			return false;

@@ -58,6 +58,7 @@ public:
 	void saveToFile(std::string fileName) const;
 
 	void generate(int n, int min, int max);
+	void generate(int n);
 
 	//-------------------------------------------------------------------------
 	void resize(int n, real fill = 0);
@@ -80,7 +81,7 @@ private:
 bool mul(const MatrixProfileSymmetric& a, const Vector& x, Vector& y);
 bool sum(const Vector& a, const Vector& b, Vector& result);
 
-sumreal sumAllElementsAbs(const Matrix& a);
+sumreal sumAllElementsAbs(const Vector& a);
 
 void calcLDL(MatrixProfileSymmetric& a_l);
 

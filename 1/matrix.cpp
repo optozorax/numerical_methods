@@ -223,6 +223,45 @@ void generateVector(int n, int min, int max, Matrix& result) {
 }
 
 //-----------------------------------------------------------------------------
+void generateVector(int n, Matrix& result) {
+	result.resize(1, n, 0);
+
+	for (int i = 0; i < n; ++i)
+		result(i, 0) = i+1;
+}
+
+//-----------------------------------------------------------------------------
+void generateGilbertMatrix(int n, Matrix& result) {
+	result.resize(n, n);
+
+	for (int i = 0; i < n; ++i) {
+		for (int j = 0; j < n; ++j) {
+			result(i, j) = double(1.0)/double((i+1)+(j+1)-1);
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+void generateTestMatrix(int n, int profileSize, Matrix& result) {
+	result.resize(n, n);
+
+	for (int i = 0; i < n; ++i) {
+		for (int j = 0; j < profileSize; ++j) if (i-j-1 >= 0) {
+			result(i, i-j-1) = -intRandom(0, 5);
+			result(i-j-1, i) = result(i, i-j-1);
+		}
+	}
+
+	for (int i = 0; i < n; ++i) {
+		sumreal sum = 0;
+		for (int j = 0; j < n; ++j) if (i != j) {
+			sum += result(i, j);
+		}
+		result(i, i) = -sum;
+	}
+}
+
+//-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 
@@ -402,7 +441,7 @@ bool solveSLAE_by_LDL(const Matrix& a, const Matrix& y, Matrix& x) {
 }
 
 //-----------------------------------------------------------------------------
-bool solevSLAE_byGaussMethod(const Matrix& a1, const Matrix& y1, Matrix& x1) {
+bool solveSLAE_byGaussMethod(const Matrix& a1, const Matrix& y1, Matrix& x1) {
 	if (!(a1.width() == a1.height() && y1.height() == a1.width() && !a1.isDegenerate()))
 		return false;
 

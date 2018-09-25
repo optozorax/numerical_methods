@@ -4,8 +4,6 @@
 #include <vector>
 #include "common.h"
 
-typedef double real;
-
 //-----------------------------------------------------------------------------
 class Matrix
 {
@@ -64,12 +62,20 @@ void generateVector(
 	Matrix& result
 );
 
-//-----------------------------------------------------------------------------
-real random(void);
-int intRandom(int min, int max);
+void generateVector(
+	int n,
+	Matrix& result
+);
 
+void generateGilbertMatrix(int n, Matrix& result);
+
+void generateTestMatrix(int n, int profileSize, Matrix& result);
+
+//-----------------------------------------------------------------------------
 bool mul(const Matrix& a, const Matrix& b, Matrix& result);
 bool sum(const Matrix& a, const Matrix& b, Matrix& result);
+
+sumreal sumAllElementsAbs(const Matrix& a);
 
 bool transpose(Matrix& a);
 
@@ -79,4 +85,4 @@ bool calcGaussianFrontOrder(const Matrix& l, const Matrix& y, Matrix& x);
 bool calcGaussianCentralOrder(const Matrix& d, const Matrix& y, Matrix& x);
 bool solveSLAE_by_LDL(const Matrix& a, const Matrix& y, Matrix& x);
 
-bool solevSLAE_byGaussMethod(const Matrix& a, const Matrix& y, Matrix& x);
+bool solveSLAE_byGaussMethod(const Matrix& a, const Matrix& y, Matrix& x);

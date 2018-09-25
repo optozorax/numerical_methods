@@ -213,9 +213,10 @@ void Vector::loadFromFile(std::string fileName) {
 //-----------------------------------------------------------------------------
 void Vector::saveToFile(std::string fileName) const {
 	std::ofstream fout(fileName);
+	fout.precision(std::numeric_limits<real>::max_digits10);
 	fout << mas.size() << std::endl;
 	for (const auto& i : mas)
-		fout << i << "\t";
+		fout << i << std::endl;
 	fout.close();
 }
 
@@ -236,6 +237,13 @@ void Vector::generate(int n, int min, int max) {
 	resize(n);
 	for (int i = 0; i < n; ++i)
 		operator()(i) = intRandom(min, max);
+}
+
+//-----------------------------------------------------------------------------
+void Vector::generate(int n) {
+	resize(n);
+	for (int i = 0; i < n; ++i)
+		operator()(i) = i+1;
 }
 
 //-----------------------------------------------------------------------------
@@ -303,6 +311,15 @@ bool sum(const Vector& a, const Vector& b, Vector& result) {
 }
 
 //-----------------------------------------------------------------------------
+sumreal sumAllElementsAbs(const Vector& a) {
+	sumreal sum = 0;
+	for (int i = 0; i < a.size(); ++i)
+		sum += fabs(a(i));
+
+	return sum;
+}
+
+//-----------------------------------------------------------------------------
 void calcLDL(MatrixProfileSymmetric& a_l) {
 	// Типо обращение к диагональному элементу
 	auto d = [&a_l] (int i) -> real& {
@@ -311,6 +328,9 @@ void calcLDL(MatrixProfileSymmetric& a_l) {
 
 	// Перебираем все строки матрицы A
 	for (int i = 0; i < a_l.size(); ++i) {
+		// Сумма для диагонального элемента
+		sumreal dsum = 0;
+
 		int iLineStart = a_l.getLineFirstElementPos(i);
 		int iLineSize = a_l.getLineSize(i);
 
@@ -335,22 +355,13 @@ void calcLDL(MatrixProfileSymmetric& a_l) {
 					   a_l.getLineElement(j, k + jLineOffset) * 
 					   a_l.getLineElement(i, k + iLineOffset);
 
-			// TODO можно ли это улучшить?
-			if (fabs(d(j)) < 0.0001)
-				currentElem = 0;
-			else
-				currentElem = (currentElem - sum) / d(j);
+			currentElem = (currentElem - sum) / d(j);
+
+			dsum += d(j) * currentElem * currentElem;
 		}
 
 		// Считаем диагональный элемент
-		sumreal sum = 0;
-
-		// TODO зансти в цикл выше
-		for (int j = 0; j < iLineSize; ++j)
-			sum += d(iLineStart + j) * 
-				   a_l.getLineElement(i, j) * 
-				   a_l.getLineElement(i, j);
-		d(i) = d(i) - sum;
+		d(i) = d(i) - dsum;
 	}
 }
 
