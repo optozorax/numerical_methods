@@ -45,7 +45,7 @@ void Matrix::saveToFile(std::string fileName) const {
 void Matrix::getFromVector(int n, int m, const std::vector<real>& data) {
 	resize(n, m);
 	for (int i = 0; i < data.size(); ++i)
-		operator()(i / m, i % n) = data[i];
+		operator()(i / n, i % n) = data[i];
 }
 
 //-----------------------------------------------------------------------------
