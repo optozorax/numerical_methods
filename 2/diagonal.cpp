@@ -1,5 +1,6 @@
 #include <cmath>
 #include <iostream>
+#include <iomanip>
 #include "diagonal.h"
 
 //-----------------------------------------------------------------------------
@@ -228,7 +229,6 @@ address* mdi::operator->() {
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 
-
 //-----------------------------------------------------------------------------
 std::vector<int> makeSevenDiagonalFormat(int n, int m, int k) {
 	std::vector<int> result;
@@ -247,6 +247,24 @@ std::vector<int> makeSevenDiagonalFormat(int n, int m, int k) {
 	result.push_back(-1-m-k);
 
 	return result;
+}
+
+//-----------------------------------------------------------------------------
+bool mul(const MatrixDiagonal& a, const Vector& x, Vector& y) {
+	if (x.size() != a.dimension())
+		return false;
+
+	y.resize(x.size());
+
+	// Зануление результата
+	y.zero();
+	for (int i = 0; i < a.getDiagonalsCount(); ++i) {
+		auto mit = a.posBegin(i);
+		for (auto it = a.begin(i); it != a.end(i); ++it, ++mit)
+			y(mit->i) += (*it) * x(mit->j);
+	}
+
+	return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -276,36 +294,24 @@ void SolverSLAE_Iterative::jacobi(const MatrixDiagonal& a, const Vector& y, Vect
 	x = start;
 	real error = epsilon + 1;
 	for (int i = 0; i < maxIterations && error > epsilon; ++i) {
-		// x^(k+1) = f
-		x1 = y;
-
-		// Обходим все диагонали и добавляем их к вектору
-		for (int i = 0; i < a.getDiagonalsCount(); ++i) {
-			auto mit = a.posBegin(i);
-			for (auto it = a.begin(i); it != a.end(i); ++it, ++mit)
-				x1(mit->i) -= (*it) * x(mit->j);
-		}
+		// Умножем матрицу на решение
+		mul(a, x, x1);
 
 		// x^(k+1) = x^k + w/a(i, i) * x^(k+1)
 		auto it = a.begin(0);
 		for (int i = 0; i < x1.size(); ++i, ++it)
-			x(i) += w / (*it) * x1(i);
+			x(i) += w / (*it) * (y(i)-x1(i));
 
 		// Считаем невязку
-		f.zero();
-		for (int i = 0; i < a.getDiagonalsCount(); ++i) {
-			auto mit = a.posBegin(i);
-			for (auto it = a.begin(i); it != a.end(i); ++it, ++mit)
-				f(mit->i) += (*it) * x(mit->j);
-		}
+		mul(a, x, f);
 
 		// Считаем относительную погрешность
 		real fNorm = f.getMax();
-		real error = fabs(yNorm - fNorm) / yNorm;
+		error = fabs(yNorm - fNorm) / yNorm;
 
 		// Выводим данные
 		if (isLog)
-			log << i << "\t" << error << std::endl;
+			log << i << "\t" << std::scientific << std::setprecision(3) << error << std::endl;
 	}
 }
 

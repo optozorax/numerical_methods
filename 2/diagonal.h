@@ -56,6 +56,8 @@ private:
 
 std::vector<int> makeSevenDiagonalFormat(int n, int m, int k);
 
+bool mul(const MatrixDiagonal& a, const Vector& x, Vector& y);
+
 //-----------------------------------------------------------------------------
 /** Матричный "итератор" для движения по диагонали. */
 struct address { int i, j; };

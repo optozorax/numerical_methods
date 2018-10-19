@@ -19,6 +19,17 @@ int main() {
 		1, 2, 3, 4, 5
 	});
 
+	/*a_d.getFromVector(2, 2, {
+		1, 10,
+		100, 1001
+	});
+
+	Matrix x_d;
+
+	x_d.getFromVector(1, 2, {
+		1, 1
+	});*/
+
 	Matrix y_d;
 	mul(a_d, x_d, y_d);
 
@@ -27,10 +38,15 @@ int main() {
 	MatrixDiagonal a(a_d);
 
 	SolverSLAE_Iterative solver;
-	solver.w = 1;
+	solver.w = 0.7;
 	solver.isLog = true;
-	solver.start = Vector(5, 1);
+	solver.start = Vector(5, 0);
+	/*solver.start = Vector(2, 0);
+	solver.start(0) = 11.01;
+	solver.start(1) = 0;
 	solver.epsilon = 0.00001;
+	solver.maxIterations = 100000;*/
+	solver.epsilon = 0.000001;
 	solver.maxIterations = 100;
 
 	Vector x1;
