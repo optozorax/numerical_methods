@@ -140,3 +140,21 @@ sumreal sumAllElementsAbs(const Vector& a) {
 
 	return sum;
 }
+
+//-----------------------------------------------------------------------------
+bool mul(const Matrix& a, const Vector& b, Vector& result) {
+	// result = a * b
+	if (a.width() != b.size())
+		return false;
+
+	result.resize(b.size());
+
+	for (int i = 0; i < a.height(); ++i) {
+		sumreal sum = 0;
+		for (int j = 0; j < a.width(); ++j)
+			sum += a(i, j) * b(j);
+		result(i) = sum;
+	}
+
+	return true;
+}

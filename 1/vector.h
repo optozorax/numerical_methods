@@ -5,7 +5,6 @@
 #include "matrix.h"
 #include "common.h"
 
-
 //-----------------------------------------------------------------------------
 class Vector
 {
@@ -44,3 +43,4 @@ private:
 //-----------------------------------------------------------------------------
 sumreal sumAllElementsAbs(const Vector& a);
 bool sum(const Vector& a, const Vector& b, Vector& result);
+bool mul(const Matrix& a, const Vector& b, Vector& result);
