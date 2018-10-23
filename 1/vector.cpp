@@ -1,5 +1,6 @@
 #include <fstream>
 #include <iomanip>
+#include <cmath>
 #include "vector.h"
 
 //-----------------------------------------------------------------------------
@@ -77,15 +78,6 @@ void Vector::zero(void) {
 }
 
 //-----------------------------------------------------------------------------
-real Vector::getMax(void) const {
-	real max = mas[0];
-	for (auto& i : mas)
-		if (i > max)
-			max = i;
-	return max;
-}
-
-//-----------------------------------------------------------------------------
 void Vector::generate(int n, int min, int max) {
 	resize(n);
 	for (int i = 0; i < n; ++i)
@@ -157,4 +149,13 @@ bool mul(const Matrix& a, const Vector& b, Vector& result) {
 	}
 
 	return true;
+}
+
+//-----------------------------------------------------------------------------
+real calcNorm(const Vector& a) {
+	sumreal sum = 0;
+	for (int i = 0; i < a.size(); ++i)
+		sum += a(i) * a(i);
+
+	return std::sqrt(sum);
 }

@@ -27,14 +27,14 @@ void Matrix::loadFromFile(std::string fileName) {
 void Matrix::saveToFile(std::string fileName) const {
 	std::ofstream fout(fileName);
 
-	fout << m_n << '\t' << m_m << std::endl;
+	fout << m_n << "\t" << m_m << std::endl;
 
 	fout.precision(std::numeric_limits<real>::digits10);
 	int w = std::numeric_limits<real>::digits10 + 4;
 
 	for (int i = 0; i < height(); ++i) {
 		for (int j = 0; j < width(); ++j)
-			fout << std::setw(w) << operator()(i, j);
+			fout << "\t" << operator()(i, j);
 		fout << std::endl;
 	}
 

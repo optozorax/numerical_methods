@@ -4,6 +4,7 @@
 #include <vector>
 #include <iostream>
 #include <map>
+#include <functional>
 #include "../1/common.h"
 #include "../1/vector.h"
 #include "../1/matrix.h"
@@ -11,6 +12,45 @@
 class MatrixDiagonal;
 class matrix_diagonal_iterator;
 class SolverSLAE_Iterative;
+
+//-----------------------------------------------------------------------------
+/** Класс для вычислений различных параметров с диагональными матрицами. */
+class Diagonal
+{
+public:
+	int n;
+
+	//-------------------------------------------------------------------------
+	Diagonal(int n);
+
+	int calcDiagonalsCount(void);
+	int calcMinDiagonal(void);
+	int calcMaxDiagonal(void);
+	int calcDiagonalSize(int d);
+
+	bool isLineIntersectDiagonal(int line, int d);
+	bool isRowIntersectDiagonal(int row, int d);
+
+	//-------------------------------------------------------------------------
+	/*
+		R - Row - столбец
+		L - Line - строка
+		P - Pos - номер элемента в диагонали
+		D - Diag - формат диагонали
+	*/
+
+	int calcLine_byDP(int d, int pos);
+	int calcRow_byDP(int d, int pos);
+
+	int calcDiag_byLR(int line, int row);
+	int calcPos_byLR(int line, int row);
+
+	int calcPos_byDL(int d, int line);
+	int calcPos_byDR(int d, int row);
+
+	int calcRow_byDL(int d, int line);
+	int calcLine_byDR(int d, int row);
+};
 
 //-----------------------------------------------------------------------------
 /** Матрица в диагональном формате. */
@@ -27,6 +67,7 @@ public:
 	MatrixDiagonal(const Matrix& a);
 
 	void toDenseMatrix(Matrix& dense) const;
+	void resize(int n, std::vector<int> format); // format[0] must be 0, because it's main diagonal
 
 	//-------------------------------------------------------------------------
 	int dimension(void) const;
@@ -46,12 +87,11 @@ public:
 	iterator end(int diagNo);
 	const_iterator end(int diagNo) const;
 
-	//-------------------------------------------------------------------------
-	static int calcDiagonalSize(int n, int d);
 private:
 	std::vector<std::vector<real>> di;
 	std::vector<int> fi;
 	int n;
+	Diagonal dc;
 };
 
 std::vector<int> makeSevenDiagonalFormat(int n, int m, int k);
@@ -71,7 +111,7 @@ bool mul(const MatrixDiagonal& a, const Vector& x, Vector& y);
 class matrix_diagonal_iterator
 {
 public:
-	matrix_diagonal_iterator(int n, int i, bool isEnd);
+	matrix_diagonal_iterator(int n, int d, bool isEnd);
 
 	matrix_diagonal_iterator& operator++();
 	matrix_diagonal_iterator  operator++(int);
@@ -103,27 +143,29 @@ private:
 	std::vector<int> m_sorted_format;
 
 	int line, start, end, pos;
-	int n;
+	Diagonal dc;
 
 	bool m_isLineEnd;
 	bool m_isEnd;
-
-	static bool isIntersectDiagLine(int n, int i, int d);
-	static int getStartIntersectDiagLine(int n, int i, int d);
-	static int getRowIntersectDiagLine(int n, int i, int d);
 
 	void calcPos(void);
 };
 
 //-----------------------------------------------------------------------------
 /** Класс итеративного решателя СЛАУ для диагональной матрицы. */
+struct IterationsResult
+{
+	int iterations;
+	double relativeResidual;
+};
+
 class SolverSLAE_Iterative
 {
 public:
 	SolverSLAE_Iterative();
 
-	int jacobi(const MatrixDiagonal& a, const Vector& y, Vector& x);
-	int seidel(const MatrixDiagonal& a, const Vector& y, Vector& x);
+	IterationsResult jacobi(const MatrixDiagonal& a, const Vector& y, Vector& x) const;
+	IterationsResult seidel(const MatrixDiagonal& a, const Vector& y, Vector& x) const;
 
 	double 			w;
 	bool 			isLog;
@@ -133,11 +175,26 @@ public:
 	int 			maxIterations;
 
 private:
+	mutable Vector x1;
+
 	void mulUpperTriangle(
 		const MatrixDiagonal& a, 
 		const Vector& x, 
 		Vector& y
-	);
+	) const;
+
+	// До итерации: x - текущее решение. После итерации x - следующее решение.
+	void iteration_jacobi(const MatrixDiagonal& a, const Vector& y, Vector& x) const;
+	void iteration_seidel(const MatrixDiagonal& a, const Vector& y, Vector& x) const;
+
+	typedef std::function<void(const SolverSLAE_Iterative*, const MatrixDiagonal&, const Vector&, Vector&)> step_function;
+
+	IterationsResult iteration_process(
+		const MatrixDiagonal& a, 
+		const Vector& y, 
+		Vector& x, 
+		step_function step
+	) const;
 };
 
 //-----------------------------------------------------------------------------
@@ -147,8 +204,8 @@ class SolverSLAE_Iterative_matrix
 public:
 	SolverSLAE_Iterative_matrix();
 
-	int jacobi(const Matrix& a, const Vector& y, Vector& x);
-	int seidel(const Matrix& a, const Vector& y, Vector& x);
+	IterationsResult jacobi(const Matrix& a, const Vector& y, Vector& x) const;
+	IterationsResult seidel(const Matrix& a, const Vector& y, Vector& x) const;
 
 	double 			w;
 	bool 			isLog;
@@ -156,4 +213,19 @@ public:
 	Vector 			start;
 	double 			epsilon;
 	int 			maxIterations;
+private:
+	mutable Vector x1;
+
+	// До итерации: x - текущее решение. После итерации x - следующее решение.
+	void iteration_jacobi(const Matrix& a, const Vector& y, Vector& x) const;
+	void iteration_seidel(const Matrix& a, const Vector& y, Vector& x) const;
+
+	typedef std::function<void(const SolverSLAE_Iterative_matrix*, const Matrix&, const Vector&, Vector&)> step_function;
+
+	IterationsResult iteration_process(
+		const Matrix& a,
+		const Vector& y,
+		Vector& x,
+		step_function step
+	) const;
 };

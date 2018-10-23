@@ -26,8 +26,6 @@ public:
 
 	void zero(void);
 
-	real getMax(void) const;
-
 	void toDenseMatrix(Matrix& dense, bool isVertical) const;
 
 	//-------------------------------------------------------------------------
@@ -44,3 +42,4 @@ private:
 sumreal sumAllElementsAbs(const Vector& a);
 bool sum(const Vector& a, const Vector& b, Vector& result);
 bool mul(const Matrix& a, const Vector& b, Vector& result);
+real calcNorm(const Vector& a);
