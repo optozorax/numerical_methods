@@ -104,6 +104,13 @@ void generateDiagonalMatrix(
 	MatrixDiagonal& result
 );
 
+void generateDiagonallyDominantMatrix(
+	int n, 
+	std::vector<int> format, 
+	bool isNegative,  
+	MatrixDiagonal& result
+);
+
 bool mul(const MatrixDiagonal& a, const Vector& x, Vector& y);
 
 //-----------------------------------------------------------------------------
@@ -176,12 +183,6 @@ public:
 
 private:
 	mutable Vector x1;
-
-	void mulUpperTriangle(
-		const MatrixDiagonal& a, 
-		const Vector& x, 
-		Vector& y
-	) const;
 
 	// До итерации: x - текущее решение. После итерации x - следующее решение.
 	void iteration_jacobi(const MatrixDiagonal& a, const Vector& y, Vector& x) const;

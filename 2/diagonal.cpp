@@ -415,7 +415,7 @@ std::vector<int> generateRandomFormat(int n, int diagonalsCount) {
 
 	// Создаем массив всех возможных диагоналей
 	std::vector<int> diagonals;
-	for (int i = d.calcMinDiagonal(); i <= d.calcMaxDiagonal; ++i)
+	for (int i = d.calcMinDiagonal(); i <= d.calcMaxDiagonal(); ++i)
 		if (i != 0)
 			diagonals.push_back(i);
 
@@ -440,6 +440,34 @@ void generateDiagonalMatrix(int n, int min, int max, std::vector<int> format, Ma
 			(*it) = intRandom(min, max);
 	}
 }
+
+//-----------------------------------------------------------------------------
+void generateDiagonallyDominantMatrix(int n, std::vector<int> format, bool isNegative,  MatrixDiagonal& result) {
+	result.resize(n, format);
+
+	for (int i = 0; i < result.getDiagonalsCount(); ++i) {
+		auto mit = result.posBegin(i);
+		for (auto it = result.begin(i); it != result.end(i); ++it, ++mit) {
+			if (isNegative)
+				*it = -intRandom(0, 5);
+			else
+				*it = intRandom(0, 5);
+		}
+	}
+
+	matrix_diagonal_line_iterator mit(n, format, false);
+	for (; !mit.isEnd(); ++mit) {
+		sumreal& sum = result.begin(0)[mit.i];
+		sum = 0;
+		for (; !mit.isLineEnd(); ++mit)
+			if (mit.i != mit.j)
+				sum += result.begin(mit.dn)[mit.di];
+		sum = std::fabs(sum);
+	}
+
+	result.begin(0)[0] += 1;
+}
+
 
 //-----------------------------------------------------------------------------
 bool mul(const MatrixDiagonal& a, const Vector& x, Vector& y) {
@@ -519,16 +547,6 @@ void SolverSLAE_Iterative::iteration_jacobi(const MatrixDiagonal& a, const Vecto
 	// Умножаем матрицу на решение
 	mul(a, x, x1);
 
-	// Умножаем матрицу на решение
-	// x1.zero();
-	// mulUpperTriangle(a, x, x1);
-	// for (int i = 0; i < a.getDiagonalsCount(); ++i) 
-	// 	if (a.getDiagonalPos(i) < 0) {
-	// 		auto mit = a.posBegin(i);
-	// 		for (auto it = a.begin(i); it != a.end(i); ++it, ++mit)
-	// 			x1(mit.i) += (*it) * x(mit.j);
-	// 	}
-
 	// x^(k+1) = x^k + w/a(i, i) * x^(k+1)
 	auto it = a.begin(0);
 	for (int i = 0; i < x1.size(); ++i, ++it)
@@ -537,9 +555,14 @@ void SolverSLAE_Iterative::iteration_jacobi(const MatrixDiagonal& a, const Vecto
 
 //-----------------------------------------------------------------------------
 void SolverSLAE_Iterative::iteration_seidel(const MatrixDiagonal& a, const Vector& y, Vector& x) const {
-	// Умножем матрицу на решение
+	// Умножем верхний треугольник на решение
 	x1.zero();
-	mulUpperTriangle(a, x, x1);
+	for (int i = 0; i < a.getDiagonalsCount(); ++i)
+		if (a.getDiagonalPos(i) >= 0) {
+			auto mit = a.posBegin(i);
+			for (auto it = a.begin(i); it != a.end(i); ++it, ++mit)
+				x1(mit.i) += (*it) * x(mit.j);
+		}
 
 	// Проходим по нижнему треугольнику и считаем все параметры
 	matrix_diagonal_line_iterator mit(a.dimension(), a.getFormat(), true);
@@ -548,21 +571,6 @@ void SolverSLAE_Iterative::iteration_seidel(const MatrixDiagonal& a, const Vecto
 			x1(mit.i) += a.begin(mit.dn)[mit.di] * x(mit.j);
 		x(mit.i) = x(mit.i) + w/a.begin(0)[mit.i] * (y(mit.i) - x1(mit.i));
 	}
-}
-
-//-----------------------------------------------------------------------------
-void SolverSLAE_Iterative::mulUpperTriangle(const MatrixDiagonal& a, const Vector& x, Vector& y) const {
-	if (x.size() != a.dimension())
-		throw std::exception();
-
-	y.resize(x.size());
-	y.zero();
-	for (int i = 0; i < a.getDiagonalsCount(); ++i) 
-		if (a.getDiagonalPos(i) >= 0) {
-			auto mit = a.posBegin(i);
-			for (auto it = a.begin(i); it != a.end(i); ++it, ++mit)
-				y(mit.i) += (*it) * x(mit.j);
-		}
 }
 
 //-----------------------------------------------------------------------------
