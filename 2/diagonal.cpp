@@ -468,7 +468,6 @@ void generateDiagonallyDominantMatrix(int n, std::vector<int> format, bool isNeg
 	result.begin(0)[0] += 1;
 }
 
-
 //-----------------------------------------------------------------------------
 bool mul(const MatrixDiagonal& a, const Vector& x, Vector& y) {
 	if (x.size() != a.dimension())
@@ -571,81 +570,4 @@ void SolverSLAE_Iterative::iteration_seidel(const MatrixDiagonal& a, const Vecto
 			x1(mit.i) += a.begin(mit.dn)[mit.di] * x(mit.j);
 		x(mit.i) = x(mit.i) + w/a.begin(0)[mit.i] * (y(mit.i) - x1(mit.i));
 	}
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-
-//-----------------------------------------------------------------------------
-SolverSLAE_Iterative_matrix::SolverSLAE_Iterative_matrix() :
-	w(1),
-	isLog(false),
-	log(std::cout),
-	start(),
-	epsilon(0.00001),
-	maxIterations(100) {
-}
-
-//-----------------------------------------------------------------------------
-IterationsResult SolverSLAE_Iterative_matrix::jacobi(const Matrix& a, const Vector& y, Vector& x) const {
-	return iteration_process(a, y, x, &SolverSLAE_Iterative_matrix::iteration_jacobi);
-}
-
-//-----------------------------------------------------------------------------
-IterationsResult SolverSLAE_Iterative_matrix::seidel(const Matrix& a, const Vector& y, Vector& x) const {
-	return iteration_process(a, y, x, &SolverSLAE_Iterative_matrix::iteration_seidel);
-}
-
-//-----------------------------------------------------------------------------
-void SolverSLAE_Iterative_matrix::iteration_jacobi(const Matrix& a, const Vector& y, Vector& x) const {
-	for (int i = 0; i < a.height(); ++i) {
-		sumreal sum = 0;
-		for (int j = 0; j < a.height(); ++j)
-			sum += a(i, j) * x(j);
-		x1(i) = x(i) + w / a(i, i) * (y(i) - sum);
-	}
-
-	x = x1;
-}
-
-//-----------------------------------------------------------------------------
-void SolverSLAE_Iterative_matrix::iteration_seidel(const Matrix& a, const Vector& y, Vector& x) const {
-	for (int i = 0; i < a.height(); ++i) {
-		sumreal sum = 0;
-		for (int j = 0; j < a.height(); ++j)
-			sum += a(i, j) * x(j);
-		x(i) = x(i) + w / a(i, i) * (y(i) - sum);
-	}
-}
-
-//-----------------------------------------------------------------------------
-IterationsResult SolverSLAE_Iterative_matrix::iteration_process(const Matrix& a, const Vector& y, Vector& x, step_function step) const {
-	if (a.width() != a.height() || a.width() != y.size() || start.size() != y.size())
-		throw std::exception();
-
-	// Считаем норму матрицы: ее максимальный элемент по модулю
-	real yNorm = calcNorm(y);
-	x1.resize(y.size());
-	x = start;
-
-	// Цикл по итерациям
-	int i = 0;
-	real relativeResidual = epsilon + 1;
-	for (; i < maxIterations && relativeResidual > epsilon; ++i) {
-		// Итерационный шаг
-		step(this, a, y, x);
-
-		// Считаем невязку
-		mul(a, x, x1);
-		x1.negate();
-		sum(x1, y, x1);
-		relativeResidual = calcNorm(x1) / yNorm;
-
-		// Выводим данные
-		if (isLog)
-			log << i << "\t" << std::scientific << std::setprecision(3) << relativeResidual << std::endl;
-	}
-
-	return {i, relativeResidual};
 }

@@ -197,36 +197,3 @@ private:
 		step_function step
 	) const;
 };
-
-//-----------------------------------------------------------------------------
-/** Класс итеративного решателя СЛАУ для плотной матрицы. */
-class SolverSLAE_Iterative_matrix
-{
-public:
-	SolverSLAE_Iterative_matrix();
-
-	IterationsResult jacobi(const Matrix& a, const Vector& y, Vector& x) const;
-	IterationsResult seidel(const Matrix& a, const Vector& y, Vector& x) const;
-
-	double 			w;
-	bool 			isLog;
-	std::ostream& 	log;
-	Vector 			start;
-	double 			epsilon;
-	int 			maxIterations;
-private:
-	mutable Vector x1;
-
-	// До итерации: x - текущее решение. После итерации x - следующее решение.
-	void iteration_jacobi(const Matrix& a, const Vector& y, Vector& x) const;
-	void iteration_seidel(const Matrix& a, const Vector& y, Vector& x) const;
-
-	typedef std::function<void(const SolverSLAE_Iterative_matrix*, const Matrix&, const Vector&, Vector&)> step_function;
-
-	IterationsResult iteration_process(
-		const Matrix& a,
-		const Vector& y,
-		Vector& x,
-		step_function step
-	) const;
-};

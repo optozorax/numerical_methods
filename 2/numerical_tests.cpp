@@ -147,6 +147,8 @@ void makeTable(
 		<< "p{0.05cm}\n|X[-1,c]||X[-1,c]|X[-1,c]|X[-1,c]|X[-1,c]|X[-1,c]|}\n"
 		<< "\\cline{1-6}\\cline{8-13}\n"
 		<< "\\multicolumn{6}{|c|}{Метод Якоби} && \\multicolumn{6}{c|}{Метод Зейделя} \\\\\n"
+		<< "\\cline{1-6}\\cline{8-13}\n"
+		<< "$w$ & $x$ & $x-x^*$ & \\tcell{\\tiny Относительная\\\\\\tiny невязка} & {\\tiny $\\mathop{cond}(A) >$} & {\\tiny Итераций} && $w$ & $x$ & $x-x^*$ & \\tcell{\\tiny Относительная\\\\\\tiny невязка} & {\\tiny $\\mathop{cond}(A) >$} & {\\tiny Итераций} \\\\\n"
 		<< "\\cline{1-6}\\cline{8-13}\n";
 
 	auto write_vector = [&fout] (const Vector& a) {
@@ -224,19 +226,27 @@ void makeTable(
 
 	for (int i = 0; i < std::max(count1, count2); i+=10) {
 		if (min1 == i) {
+			if (i != 0) write_line(i-1, 0);
 			write_line(i, 1);
+			write_line(i+1, 0);
 		} else {
 			if (min2 == i) {
+				if (i != 0) write_line(i-1, 0);
 				write_line(i, 2);
+				write_line(i+1, 0);
 			} else {
 				write_line(i, 0);
 			}
 		}
 		if (i + 10 > min1 && min1 > i) {	
+			if (min1-1 != i) write_line(min1-1, 0);
 			write_line(min1, 1);
+			if (min1+1 != i+10) write_line(min1+1, 0);
 		} else {
 			if (i + 10 > min2 && min2 > i) {
+				if (min2-1 != i) write_line(min2-1, 0);
 				write_line(min2, 2);
+				if (min2+1 != i+10) write_line(min2+1, 0);
 			}
 		}
 	}
