@@ -42,7 +42,7 @@ void testResidual(const MatrixDiagonal& a, const Vector& x, method_function meth
 //-----------------------------------------------------------------------------
 
 TEST_CASE("Test residual of methods") {
-	for (int i = 10; i < 100; ++i) {
+	for (int i = 10; i < 100; i+=5) {
 		for (int j = 0; j < 3; ++j) {
 			MatrixDiagonal a;
 			auto format = generateRandomFormat(i, intRandom(10, Diagonal(i).calcDiagonalsCount()));
