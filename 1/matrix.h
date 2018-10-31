@@ -12,6 +12,9 @@ public:
 	void loadFromFile(std::string fileName);
 	void saveToFile(std::string fileName) const;
 
+	void save(std::ostream& out) const;
+	void load(std::istream& in);
+
 	void getFromVector(int n, int m, const std::vector<real>& data);
 
 	void resize(int n, int m, real fill = 0);

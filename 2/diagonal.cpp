@@ -169,6 +169,37 @@ void MatrixDiagonal::resize(int n1, std::vector<int> format) {
 }
 
 //-----------------------------------------------------------------------------
+void MatrixDiagonal::save(std::ostream& out) const {
+	out << n << " " << fi.size() << std::endl;
+	for (const auto& i : fi)
+		out << i << " ";
+	out << std::endl;
+
+	for (int i = 0; i < getDiagonalsCount(); ++i) {
+		for (auto j = begin(i); j != end(i); ++j) {
+			out << (*j) << " ";
+		}
+		out << std::endl;
+	}
+	out << std::endl;
+}
+
+//-----------------------------------------------------------------------------
+void MatrixDiagonal::load(std::istream& in) {
+	int n, m;
+	in >> n >> m;
+	std::vector<int> format(m, 0);
+	for (int i = 0; i < m; ++i)
+		in >> format[i];
+	resize(n, format);
+	for (int i = 0; i < getDiagonalsCount(); ++i) {
+		for (auto j = begin(i); j != end(i); ++j) {
+			in >> (*j);
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
 int MatrixDiagonal::dimension(void) const {
 	return n;
 }
@@ -498,6 +529,24 @@ SolverSLAE_Iterative::SolverSLAE_Iterative() :
 	start(), 
 	epsilon(0.00001), 
 	maxIterations(100) {
+}
+
+//-----------------------------------------------------------------------------
+void SolverSLAE_Iterative::save(std::ostream& out) const {
+	out << w << std::endl;
+	out << isLog << std::endl;
+	start.save(out);
+	out << std::scientific;
+	out << epsilon << std::endl;
+	out << std::defaultfloat;
+	out << maxIterations << std::endl;
+}
+
+//-----------------------------------------------------------------------------
+void SolverSLAE_Iterative::load(std::istream& in) {
+	in >> w >> isLog;
+	start.load(in);
+	in >> epsilon >> maxIterations;
 }
 
 //-----------------------------------------------------------------------------

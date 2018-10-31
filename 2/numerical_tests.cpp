@@ -17,6 +17,7 @@ void makeTable(
 	std::ofstream fout(fileName + ".tex");
 	std::ofstream fout1(fileName + ".dat");
 
+	//-------------------------------------------------------------------------
 	// Выводим матрицу и остальное в виде формулы
 	auto format = a.getFormat();
 	fout << "$$ " << fileName << "=\\left(\\quad\\begin{matrix}\n";
@@ -53,6 +54,7 @@ void makeTable(
 	}
 	fout << "\\end{pmatrix} $$\n\n";
 
+	//-------------------------------------------------------------------------
 	// Выводим параметры решателя
 	int exponent = floor(log10(solver.epsilon));
 	double number = solver.epsilon / pow(10.0, exponent);
@@ -75,6 +77,7 @@ void makeTable(
 	}
 	fout << "\\end{pmatrix}^T $$\n\n";
 
+	//-------------------------------------------------------------------------
 	std::vector<double> w1(200), w2(200);
 	std::vector<Vector> x1(200), x2(200);
 	std::vector<Vector> xsub1(200), xsub2(200);
@@ -134,9 +137,12 @@ void makeTable(
 		}
 	};
 
+	// Заполняем массивы расчитанными данными
 	one_method(w1, x1, xsub1, rr1, va1, it1, min1, count1, &SolverSLAE_Iterative::jacobi);
 	one_method(w2, x2, xsub2, rr2, va2, it2, min2, count2, &SolverSLAE_Iterative::seidel);
 
+	//-------------------------------------------------------------------------
+	// Выводим преамбулу таблицы
 	// w, x, x-x*, относительная невязка, vA, итераций
 	fout
 		<< "\\setlength{\\tabcolsep}{2pt}\n"
@@ -147,10 +153,11 @@ void makeTable(
 		<< "p{0.05cm}\n|X[-1,c]||X[-1,c]|X[-1,c]|X[-1,c]|X[-1,c]|X[-1,c]|}\n"
 		<< "\\cline{1-6}\\cline{8-13}\n"
 		<< "\\multicolumn{6}{|c|}{Метод Якоби} && \\multicolumn{6}{c|}{Метод Зейделя} \\\\\n"
-		<< "\\cline{1-6}\\cline{8-13}\n"
+		<< "\\hhline{*{6}{-}~*{6}{-}}\n"
 		<< "$w$ & $x$ & $x-x^*$ & \\tcell{\\tiny Относительная\\\\\\tiny невязка} & {\\tiny $\\mathop{cond}(A) >$} & {\\tiny Итераций} && $w$ & $x$ & $x-x^*$ & \\tcell{\\tiny Относительная\\\\\\tiny невязка} & {\\tiny $\\mathop{cond}(A) >$} & {\\tiny Итераций} \\\\\n"
-		<< "\\cline{1-6}\\cline{8-13}\n";
+		<< "\\hhline{*{6}{-}~*{6}{-}}\n";
 
+	//-------------------------------------------------------------------------
 	auto write_vector = [&fout] (const Vector& a) {
 		fout << "\\tcell{";
 		for (int i = 0; i < a.size(); ++i)
@@ -160,97 +167,122 @@ void makeTable(
 				fout << a(i) << "}";
 	};
 
-	auto write_line = [&] (int i, int colorNo) {
+	auto write_line = [&] (int i, bool isWrite1, bool isWrite2, std::string color1, std::string color2) {
 		int doublePrec = 16;
-		if (i < count1) {
-			if (colorNo == 1) {
-				fout << std::fixed << std::setprecision(2) << "\\cellcolor{green!30}{" << w1[i] << "} & ";
-				fout << std::fixed << std::setprecision(doublePrec) << "\\tiny{\\cellcolor{green!30}{";
-				write_vector(x1[i]);
-				fout << "}} & " << "\\tiny{\\cellcolor{green!30}{";
-				fout << std::scientific << std::setprecision(1);
-				write_vector(xsub1[i]);
-				fout << "}} & ";
-				fout << std::scientific << std::setprecision(1) << "\\cellcolor{green!30}{" << rr1[i] << "} & ";
-				fout << std::fixed << std::setprecision(2) << "\\cellcolor{green!30}{" << va1[i] << "} & ";
-				fout << "\\cellcolor{green!30}{" << it1[i] << "} & ";
-			} else {
-				fout << std::fixed << std::setprecision(2) << w1[i] << " & ";
-				fout << std::fixed << std::setprecision(doublePrec) << "\\tiny{";
-				write_vector(x1[i]);
-				fout << "} & " << "\\tiny{";
-				fout << std::scientific << std::setprecision(2);
-				write_vector(xsub1[i]);
-				fout << "} & ";
-				fout << std::scientific << std::setprecision(2) << rr1[i] << " & ";
-				fout << std::fixed << std::setprecision(2) << va1[i] << " & ";
-				fout << it1[i] << " & ";
+		if (isWrite1) {
+			std::string before_cell = "\\cellcolor{" + color1 + "}{";
+			std::string after_cell = "}";
+			if (color1 == "white") {
+				before_cell = "";
+				after_cell = "";
 			}
+
+			fout << std::fixed << std::setprecision(2)
+				 << before_cell << w1[i] << after_cell <<" & ";
+
+			fout << std::fixed << std::setprecision(doublePrec) 
+				 << "\\tiny{" << before_cell;
+				 write_vector(x1[i]);
+			fout << after_cell << "} & ";
+
+			fout << std::scientific << std::setprecision(1)
+ 				 << "\\tiny{" << before_cell;
+				 write_vector(xsub1[i]);
+			fout << after_cell << "} & ";
+
+			fout << std::scientific << std::setprecision(1) 
+				 << before_cell << rr1[i] << after_cell << " & ";
+
+			fout << std::fixed << std::setprecision(2) 
+				 << before_cell << va1[i] << after_cell << " & ";
+
+			fout << before_cell << it1[i] << after_cell << " & ";
 		} else {
 			fout << "& & & & & &";
 		}
 
 		fout << " & ";
 
-		if (i < count2) {
-			if (colorNo == 2) {
-				fout << std::fixed << std::setprecision(2) << "\\cellcolor{green!30}{" << w2[i] << "} & ";
-				fout << std::fixed << std::setprecision(doublePrec) << "\\tiny{\\cellcolor{green!30}{";
-				write_vector(x2[i]);
-				fout << "}} & " << "\\tiny{\\cellcolor{green!30}{";
-				fout << std::scientific << std::setprecision(1);
-				write_vector(xsub2[i]);
-				fout << "}} & ";
-				fout << std::scientific << std::setprecision(2) << "\\cellcolor{green!30}{" << rr2[i] << "} & ";
-				fout << std::fixed << std::setprecision(2) << "\\cellcolor{green!30}{" << va2[i] << "} & ";
-				fout << "\\cellcolor{green!30}{" << it2[i] << "} \\\\";
-			} else {
-				fout << std::fixed << std::setprecision(2) << w2[i] << " & ";
-				fout << std::fixed << std::setprecision(doublePrec) << "\\tiny{";
-				write_vector(x2[i]);
-				fout << "} & " << "\\tiny{";
-				fout << std::scientific << std::setprecision(1);
-				write_vector(xsub2[i]);
-				fout << "} & ";
-				fout << std::scientific << std::setprecision(2) << rr2[i] << " & ";
-				fout << std::fixed << std::setprecision(2) << va2[i] << " & ";
-				fout << it2[i] << " \\\\";
+		if (isWrite2) {
+			std::string before_cell = "\\cellcolor{" + color2 + "}{";
+			std::string after_cell = "}";
+			if (color2 == "white") {
+				before_cell = "";
+				after_cell = "";
 			}
+
+			fout << std::fixed << std::setprecision(2)
+				 << before_cell << w2[i] << after_cell <<" & ";
+
+			fout << std::fixed << std::setprecision(doublePrec) 
+				 << "\\tiny{" << before_cell;
+				 write_vector(x2[i]);
+			fout << after_cell << "} & ";
+
+			fout << std::scientific << std::setprecision(1)
+ 				 << "\\tiny{" << before_cell;
+				 write_vector(xsub2[i]);
+			fout << after_cell << "} & ";
+
+			fout << std::scientific << std::setprecision(1) 
+				 << before_cell << rr2[i] << after_cell << " & ";
+
+			fout << std::fixed << std::setprecision(2) 
+				 << before_cell << va2[i] << after_cell << " & ";
+				 
+			fout << before_cell << it2[i] << after_cell << " \\\\";
 		} else {
 			fout << "& & & & & \\\\";	
 		}
 
 		fout << "\n";
-		fout << "\\cline{1-6}\\cline{8-13}\n";
+		fout << "\\hhline{*{6}{-}~*{6}{-}}\n";
 	};
 
-	for (int i = 0; i < std::max(count1, count2); i+=10) {
-		if (min1 == i) {
-			if (i != 0) write_line(i-1, 0);
-			write_line(i, 1);
-			write_line(i+1, 0);
-		} else {
-			if (min2 == i) {
-				if (i != 0) write_line(i-1, 0);
-				write_line(i, 2);
-				write_line(i+1, 0);
-			} else {
-				write_line(i, 0);
-			}
-		}
-		if (i + 10 > min1 && min1 > i) {	
-			if (min1-1 != i) write_line(min1-1, 0);
-			write_line(min1, 1);
-			if (min1+1 != i+10) write_line(min1+1, 0);
-		} else {
-			if (i + 10 > min2 && min2 > i) {
-				if (min2-1 != i) write_line(min2-1, 0);
-				write_line(min2, 2);
-				if (min2+1 != i+10) write_line(min2+1, 0);
-			}
-		}
+	//-------------------------------------------------------------------------
+	// Формируем массив тех значений, которые надо вывести
+	int tableSize = std::max(count1, count2);
+	std::vector<int> to_write;
+	for (int i = 10; i < tableSize; i+=10)
+		to_write.push_back(i);
+	to_write.push_back(min1-1);
+	to_write.push_back(min1);
+	to_write.push_back(min1+1);
+	to_write.push_back(min2-1);
+	to_write.push_back(min2);
+	to_write.push_back(min2+1);
+
+	std::sort(to_write.begin(), to_write.end(), std::less<int>());
+
+	// Удаляем дубликаты
+	to_write.erase(std::unique(to_write.begin(), to_write.end()), to_write.end());
+
+	// Удаляем отрицательные значения
+	while (to_write.front() <= 0)
+		to_write.erase(to_write.begin());
+
+	// Удаляем значения за допустимыми пределами
+	while (to_write.back() >= tableSize)
+		to_write.pop_back();
+
+	// Выводим каждую строку
+	std::string orange = "orange!30";
+	std::string green = "green!30";
+	for (auto& i : to_write) {
+		std::string color1 = "white", color2 = "white";
+		if (i == min1)
+			color1 = green;
+		if (abs(i-min1) == 1)
+			color1 = orange;
+		if (i == min2)
+			color2 = green;
+		if (abs(i-min2) == 1)
+			color2 = orange;
+		write_line(i, i < count1, i < count2, color1, color2);
 	}
 
+	//-------------------------------------------------------------------------
+	// Выводим данные для построения графика
 	fout1 << "w1\tit1\tw2\tit2" << std::endl;
 	fout1 << std::fixed << std::setprecision(2);
 	for (int i = 0; i < std::max(count1, count2); ++i) {
@@ -266,12 +298,15 @@ void makeTable(
 
 	fout << "\\end{longtabu}}}\n\n";
 
+	//-------------------------------------------------------------------------
+	// Выводим график
 	fout 
+		<< "\\subsubsection{График зависимости числа итераций от параметра релаксации}\n\n"
 		<< "\\noindent\\begin{tikzpicture}\n"
-		<< "\\begin{semilogyaxis}[xlabel=w,ylabel=Iterations,width=\\textwidth, height=6cm]\n"
+		<< "\\begin{semilogyaxis}[xlabel=w,ylabel=Итераций,width=\\textwidth, height=6cm]\n"
 		<< "\\addplot[red, no markers] table [y=it1, x=w1]{" << fileName << ".dat};\n"
 		<< "\\addplot[blue, no markers] table [y=it2, x=w2]{" << fileName << ".dat};\n"
-		<< "\\legend{Jacobi,Seidel}\n"
+		<< "\\legend{Метод Якоби,Метод Зейделя}\n"
 		<< "\\end{semilogyaxis}\n"
 		<< "\\end{tikzpicture}";
 
@@ -284,27 +319,54 @@ void makeTable(
 //-----------------------------------------------------------------------------
 
 int main() {
-	// Получаем необходимые матрицы
 	MatrixDiagonal a, b;
-	generateDiagonallyDominantMatrix(10, makeSevenDiagonalFormat(10, 3, 2), true, a);
-	generateDiagonallyDominantMatrix(10, makeSevenDiagonalFormat(10, 2, 4), false, b);
-
 	Vector x;
-	x.generate(10);
-
 	Vector y_a, y_b;
+	SolverSLAE_Iterative solver;
+
+	std::ifstream fin("num.txt");
+	a.load(fin);
+	b.load(fin);
+	x.load(fin);
+	solver.load(fin);
+	fin.close();
+		
 	mul(a, x, y_a);
 	mul(b, x, y_b);
 
-	// Начальные присвоения
-	SolverSLAE_Iterative solver;
+	// Создаем таблицы
+	makeTable(a, x, y_a, solver, "A");
+	makeTable(b, x, y_b, solver, "B");
+
+	Matrix a_dense, b_dense;
+	a.toDenseMatrix(a_dense);
+	b.toDenseMatrix(b_dense);
+
+	std::ofstream fout("matrixes.txt");
+	fout << std::defaultfloat;
+	a_dense.save(fout);
+	b_dense.save(fout);
+	fout.close();
+
+	/*// Сохраняем сгенерированные данные в файл
+	std::ofstream fout("num.txt");
+
+	generateDiagonallyDominantMatrix(10, makeSevenDiagonalFormat(10, 3, 2), true, a);
+	b = a;
+	for (int i = 0; i < b.getDiagonalsCount(); i++)
+		for (auto j = b.begin(i); j != b.end(i); j++)
+			(*j) = std::fabs(*j);
+	x.generate(10);
 	solver.w = 0;
 	solver.isLog = false;
 	solver.start = Vector(10, 0);
 	solver.epsilon = 1e-14;
 	solver.maxIterations = 1e5;
 
-	// Создаем таблицы
-	makeTable(a, x, y_a, solver, "A");
-	makeTable(b, x, y_b, solver, "B");
+	a.save(fout);
+	b.save(fout);
+	x.save(fout);
+	solver.save(fout);
+
+	fout.close();*/
 }

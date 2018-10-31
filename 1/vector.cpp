@@ -41,11 +41,7 @@ void Vector::toDenseMatrix(Matrix& dense, bool isVertical) const {
 //-----------------------------------------------------------------------------
 void Vector::loadFromFile(std::string fileName) {
 	std::ifstream fin(fileName);
-	int n;
-	fin >> n;
-	resize(n);
-	for (int i = 0; i < n; ++i)
-		fin >> mas[i];
+	load(fin);
 	fin.close();
 }
 
@@ -53,10 +49,25 @@ void Vector::loadFromFile(std::string fileName) {
 void Vector::saveToFile(std::string fileName) const {
 	std::ofstream fout(fileName);
 	fout.precision(std::numeric_limits<real>::digits10);
-	fout << mas.size() << std::endl;
-	for (const auto& i : mas)
-		fout << i << std::endl;
+	save(fout);
 	fout.close();
+}
+
+//-----------------------------------------------------------------------------
+void Vector::save(std::ostream& out) const {
+	out << mas.size() << std::endl;
+	for (const auto& i : mas)
+		out << i << std::endl;
+	out << std::endl;
+}
+
+//-----------------------------------------------------------------------------
+void Vector::load(std::istream& in) {
+	int n;
+	in >> n;
+	resize(n);
+	for (int i = 0; i < n; ++i)
+		in >> mas[i];
 }
 
 //-----------------------------------------------------------------------------

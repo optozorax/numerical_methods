@@ -33,6 +33,7 @@
 \usepackage{multirow}
 \usepackage{tabu}
 \usepackage{colortbl}
+\usepackage{hhline}
 
 % Создаем команду, чтобы переносить текст на новую строку внутри таблицы
 \newcommand{\tcell}[2][c]{\begin{tabular}[#1]{@{}c@{}}#2\end{tabular}}
@@ -58,6 +59,7 @@
 \usetikzlibrary{arrows.meta}
 
 % Для цветных таблиц
+\usepackage{multicol}
 \usepackage{tcolorbox}
 \tcbuselibrary{skins}
 \tcbuselibrary{breakable}
@@ -68,7 +70,7 @@
 \usepackage{minted}
 
 % Задаем цвет номеров строк подсветки кода
-\renewcommand{\theFancyVerbLine}{\sffamily\textcolor[rgb]{1, 1, 1}{\tiny\arabic{FancyVerbLine}}}
+\renewcommand{\theFancyVerbLine}{\sffamily\textcolor[rgb]{1, 1, 1}{\fontsize{4}{4}\selectfont\arabic{FancyVerbLine}}}
 
 % Определяем новую команду для красивой вставки кода в рамочке и с прочими прелестями
 \newcommand{\mycodeinput}[3]{
@@ -78,16 +80,17 @@
 	boxrule=0.5pt, 
 	listing only,
 	left=-0.5mm,
-	leftrule=6mm,
+	leftrule=3.3mm,
 	arc=2mm, outer arc=2mm,
-	top=2pt,
+	top=0pt,
 	bottom=0pt,
-	enhanced,
+	enhanced jigsaw,
 	breakable,
 	title={#3},
 	coltitle=black, 
-	fonttitle=\bfseries\ttfamily\large,
-	attach boxed title to top center={yshift=-3mm,yshifttext=-1mm},
+	fonttitle=\bfseries\ttfamily,
+	break at=-\baselineskip/0pt/\textheight, % Магия для работы multicols
+	attach boxed title to top center={yshift=-1mm,yshifttext=-1mm},
 	boxed title style={
 		enhanced,
 		nobeforeafter,
@@ -98,7 +101,7 @@
 		right=0mm,
 		left=4mm,
 		arc=1pt,
-		boxsep=3pt,
+		boxsep=2pt,
 		before upper={\vphantom{dlg}},
 		colframe=black!30!white,
 		colback=black!10!white,
@@ -106,7 +109,7 @@
 			\begin{tcbclipinterior}
 			\fill[black!30!white]
 				(frame.south west)
-					rectangle node[text=white,font=\sffamily\bfseries\footnotesize,rotate=90] {FILE} 
+					rectangle node[text=white,font=\sffamily\bfseries\scriptsize,rotate=90] {FILE} 
 				([xshift=4mm]frame.north west);
 			\end{tcbclipinterior}
 		}
@@ -119,7 +122,7 @@
 	linenos,
 	numbersep=1mm,
 	mathescape, 
-	fontsize=\tiny, 
+	fontsize=\fontsize{4}{4}\selectfont, 
 	tabsize=4
 ]{#1}{#2}
 \end{tcolorbox}

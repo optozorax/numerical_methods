@@ -27,19 +27,37 @@ void Matrix::loadFromFile(std::string fileName) {
 void Matrix::saveToFile(std::string fileName) const {
 	std::ofstream fout(fileName);
 
-	fout << m_n << "\t" << m_m << std::endl;
-
 	fout.precision(std::numeric_limits<real>::digits10);
 	int w = std::numeric_limits<real>::digits10 + 4;
-
-	for (int i = 0; i < height(); ++i) {
-		for (int j = 0; j < width(); ++j)
-			fout << "\t" << operator()(i, j);
-		fout << std::endl;
-	}
+	save(fout);
 
 	fout.close();
 }
+
+//-----------------------------------------------------------------------------
+void Matrix::load(std::istream& in) {
+	m_matrix.clear();
+	int n, m;
+	in >> n >> m;
+	resize(n, m);
+	for (int i = 0; i < height(); ++i) {
+		for (int j = 0; j < width(); ++j) {
+			in >> operator()(i, j);
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+void Matrix::save(std::ostream& out) const {
+	out << m_n << "\t" << m_m << std::endl;
+	for (int i = 0; i < height(); ++i) {
+		for (int j = 0; j < width(); ++j)
+			out << "\t" << operator()(i, j);
+		out << std::endl;
+	}
+	out << std::endl;
+}
+
 
 //-----------------------------------------------------------------------------
 void Matrix::getFromVector(int n, int m, const std::vector<real>& data) {

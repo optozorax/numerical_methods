@@ -16,6 +16,9 @@ public:
 	void loadFromFile(std::string fileName);
 	void saveToFile(std::string fileName) const;
 
+	void save(std::ostream& out) const;
+	void load(std::istream& in);
+
 	void generate(int n, int min, int max);
 	void generate(int n);
 

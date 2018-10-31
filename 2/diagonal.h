@@ -69,6 +69,9 @@ public:
 	void toDenseMatrix(Matrix& dense) const;
 	void resize(int n, std::vector<int> format); // format[0] must be 0, because it's main diagonal
 
+	void save(std::ostream& out) const;
+	void load(std::istream& in);
+
 	//-------------------------------------------------------------------------
 	int dimension(void) const;
 	int getDiagonalsCount(void) const;
@@ -170,6 +173,9 @@ class SolverSLAE_Iterative
 {
 public:
 	SolverSLAE_Iterative();
+
+	void save(std::ostream& out) const;
+	void load(std::istream& in);
 
 	IterationsResult jacobi(const MatrixDiagonal& a, const Vector& y, Vector& x) const;
 	IterationsResult seidel(const MatrixDiagonal& a, const Vector& y, Vector& x) const;
