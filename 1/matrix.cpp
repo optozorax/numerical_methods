@@ -36,7 +36,7 @@ void Matrix::saveToFile(std::string fileName) const {
 
 //-----------------------------------------------------------------------------
 void Matrix::load(std::istream& in) {
-	m_matrix.clear();
+	m_matrix.clear(); m_m = 0; m_n = 0;
 	int n, m;
 	in >> n >> m;
 	resize(n, m);
@@ -52,7 +52,7 @@ void Matrix::save(std::ostream& out) const {
 	out << m_n << "\t" << m_m << std::endl;
 	for (int i = 0; i < height(); ++i) {
 		for (int j = 0; j < width(); ++j)
-			out << "\t" << operator()(i, j);
+			out << "\t" << std::setw(10) << operator()(i, j);
 		out << std::endl;
 	}
 	out << std::endl;
@@ -346,6 +346,45 @@ sumreal sumAllElementsAbs(const Matrix& a) {
 	}
 
 	return sum;
+}
+
+//-----------------------------------------------------------------------------
+bool calcLUsq(const Matrix& a, Matrix& l, Matrix& u) {
+	if (a.width() != a.height())
+		return false;
+
+	l.resize(a.width(), a.height(), 0);
+	u.resize(a.width(), a.height(), 0);	
+
+	for (int i = 0; i < a.height(); ++i) {
+		// Считаем элементы матрицы L
+		for (int j = 0; j < i; ++j) {
+			real sum = 0;
+			for (int k = 0; k < j; ++k)
+				sum += l(i, k) * u(k, j);
+
+			l(i, j) = (a(i, j) - sum) / l(j, j);
+		}
+
+		// Считаем элементы матрицы U
+		for (int j = 0; j < i; ++j) {
+			real sum = 0;
+			for (int k = 0; k < j; ++k)
+				sum += l(j, k) * u(k, i);
+
+			u(j, i) = (a(j, i) - sum) / u(j, j);
+		}
+
+		// Считаем диагональный элемент
+		real sum = 0;
+		for (int k = 0; k < i; ++k)
+			sum += l(i, k) * u(k, i);
+
+		l(i, i) = sqrt(a(i, i) - sum);
+		u(i, i) = l(i, i);
+	}
+	
+	return true;
 }
 
 //-----------------------------------------------------------------------------
