@@ -2,8 +2,10 @@
 #include <iostream>
 #include <fstream>
 #include <chrono>
+#include <iomanip>
 
 #include "../1/matrix.h"
+#include "../1/vector.h"
 
 using namespace std;
 
@@ -49,19 +51,6 @@ struct matrix
 			}
 		}
 	}
-
-	/*void addElem(int i1, int j1, double elem) {
-		if (i[i1]-i[i1-1] == 0) {
-			i[i1] = j.size();
-			i[i1+1] = j.size();
-		}
-		j.push_back(j1);
-		i[i1+1]++;
-		if (j1 < i1)
-			l.push_back(elem);
-		else 
-			u.push_back(elem);
-	}*/
 
 	int lineElemStart(int line) const { 
 		return i[line]; 
@@ -179,26 +168,6 @@ void synchronize_iterators(T1& i, T2& j) {
 	}
 }
 
-void mul_l_invert_t(const matrix& l, vector<double>& y_x) {
-
-}
-
-void mul_u_invert_t(const matrix& u, vector<double>& y_x) {
-
-}
-
-void mul_l_invert(const matrix& l, vector<double>& y_x) {
-
-}
-
-void mul_u_invert(const matrix& u, vector<double>& y_x) {
-
-}
-
-void mul_u(const matrix& u, vector<double>& y_x) {
-
-}
-
 void lu_decompose(const matrix& a, matrix& lu) {
 	lu.init(a.n);
 	for (int i = 0; i < a.n; ++i) {
@@ -289,19 +258,122 @@ void lu_decompose(const matrix& a, matrix& lu) {
 }
 
 void mul(const matrix& a, vector<double>& x_y) {
+	vector<double> result(a.n, 0);
 
+	for (int i = 0; i < a.n; ++i) {
+		int start = a.lineElemStart(i);
+		int size = a.lineElemCount(i);
+		for (int j = 0; j < size; j++) {
+			result[i] += a.l[start + j] * x_y[a.lineElemRow(i, j)];
+			result[a.lineElemRow(i, j)] += a.u[start + j] * x_y[i];
+		}
+	}
+
+	// Умножение диагональных элементов на вектор
+	for (int i = 0; i < a.n; ++i)
+		result[i] += a.d[i] * x_y[i];
+
+	x_y = result;
 }
 
 void mul_t(const matrix& a, vector<double>& x_y) {
+	vector<double> result(a.n, 0);
 
+	for (int i = 0; i < a.n; ++i) {
+		int start = a.lineElemStart(i);
+		int size = a.lineElemCount(i);
+		for (int j = 0; j < size; j++) {
+			result[i] += a.u[start + j] * x_y[a.lineElemRow(i, j)];
+			result[a.lineElemRow(i, j)] += a.l[start + j] * x_y[i];
+		}
+	}
+
+	// Умножение диагональных элементов на вектор
+	for (int i = 0; i < a.n; ++i)
+		result[i] += a.d[i] * x_y[i];
+
+	x_y = result;
+}
+
+void mul_l_invert_t(const matrix& l, vector<double>& y_x) {
+	for (int i = l.n - 1; i >= 0; i--) {
+		int start = l.lineElemStart(i);
+		int size = l.lineElemCount(i);
+
+		y_x[i] /= l.d[i];
+		for (int j = 0; j < size; ++j)
+			y_x[l.lineElemRow(i, j)] -= y_x[i] * l.l[start + j];
+	}
+}
+
+void mul_u_invert_t(const matrix& u, vector<double>& y_x) {
+	for (int i = 0; i < u.n; ++i) {
+		int start = u.lineElemStart(i);
+		int size = u.lineElemCount(i);
+
+		sumreal sum = 0;
+		for (int j = 0; j < size; ++j)
+			sum += u.u[start + j] * y_x[u.lineElemRow(i, j)];
+		y_x[i] = (y_x[i] - sum) / u.d[i];
+	}
+}
+
+void mul_l_invert(const matrix& l, vector<double>& y_x) {
+	for (int i = 0; i < l.n; ++i) {
+		int start = l.lineElemStart(i);
+		int size = l.lineElemCount(i);
+
+		sumreal sum = 0;
+		for (int j = 0; j < size; ++j)
+			sum += l.l[start + j] * y_x[l.lineElemRow(i, j)];
+		y_x[i] = (y_x[i] - sum) / l.d[i];
+	}
+}
+
+void mul_u_invert(const matrix& u, vector<double>& y_x) {
+	for (int i = u.n-1; i >= 0; i--) {
+		int start = u.lineElemStart(i);
+		int size = u.lineElemCount(i);
+
+		y_x[i] /= u.d[i];
+		for (int j = 0; j < size; ++j)
+			y_x[u.lineElemRow(i, j)] -= y_x[i] * u.u[start + j];
+	}
+}
+
+void mul_u(const matrix& u, vector<double>& x_y) {
+	vector<double> result(u.n, 0);
+
+	for (int i = 0; i < u.n; ++i) {
+		int start = u.lineElemStart(i);
+		int size = u.lineElemCount(i);
+		for (int j = 0; j < size; j++) {
+			result[u.lineElemRow(i, j)] += u.u[start + j] * x_y[i];
+		}
+	}
+
+	// Умножение диагональных элементов на вектор
+	for (int i = 0; i < u.n; ++i)
+		result[i] += u.d[i] * x_y[i];
+
+	x_y = result;
 }
 
 void mul(const vector<double>& d, vector<double>& x_y) {
-
+	for (int i = 0; i < d.size(); i++)
+		x_y[i] /= d[i];
 }
 
 void mul_invert(const vector<double>& d, vector<double>& x_y) {
+	for (int i = 0; i < d.size(); i++)
+		x_y[i] *= d[i];
+}
 
+double length(const vector<double>& mas) {
+	double sum = 0;
+	for (auto& i : mas)
+		sum += mas * mas;
+	return sqrt(sum);
 }
 
 class SLAU
@@ -397,13 +469,15 @@ void msg2() {
 		rr = rr2;
 		for (int i = 0; i < n; ++i)
 			z[i] = r[i] + beta * z[i];
-		double residual = rr/ff;
+		double residual = length(r) / length(f);
 		i++;
 
 		cout << "Iter: " << i << "\tResidual: " << residual << endl;
 		if (fabs(residual) < eps || i > maxiter)
 			break;
 	}
+
+	mul_u_invert(lu, x);
 }
 
 void msg3() {
@@ -448,10 +522,14 @@ void msg3() {
 		double residual = rr/ff;
 		i++;
 
+		residual = length(r) / length(f);
+
 		cout << "Iter: " << i << "\tResidual: " << residual << endl;
 		if (fabs(residual) < eps || i > maxiter)
 			break;
 	}
+
+	mul_u_invert(lu, x);
 }
 
 void los1() {
@@ -486,6 +564,8 @@ void los1() {
 		}
 		residual -= alpha * alpha * pp;
 		i++;
+
+		residual = length(r) / length(f);
 
 		cout << "Iter: " << i << "\tResidual: " << residual << endl;
 		if (fabs(residual) < eps || i > maxiter)
@@ -533,7 +613,9 @@ void los2() {
 		residual -= alpha * alpha * pp;
 		i++;
 
-		cout << "Iter: " << i << "\tResidual: " << residual << endl;
+		residual = length(r) / length(f);
+
+		cout << "Iter: " << setw(4) << i << "\tResidual: " << residual << endl;
 		if (fabs(residual) < eps || i > maxiter)
 			break;
 	}
@@ -578,6 +660,8 @@ void los3() {
 		residual -= alpha * alpha * pp;
 		i++;
 
+		residual = length(r) / length(f);
+
 		cout << "Iter: " << i << "\tResidual: " << residual << endl;
 		if (fabs(residual) < eps || i > maxiter)
 			break;
@@ -601,13 +685,15 @@ int main() {
 	string dir;
 	cout << "Enter dir: ";
 	//cin >> dir;
-	dir = "test1";
 
 	SLAU s;
 	s.read(dir);
 
 	ofstream fout(dir + "/matrix.txt");
+	vector<double> f1 = s.f;
 	Matrix m, l, u, a, sub;
+	Vector pr(s.f.size()), pr1, f1_m(f1.size());
+	for (int i = 0; i < s.f.size(); i++) pr(i) = f1[i];
 	s.a.toDense(m);
 
 	lu_decompose(s.a, s.lu);
@@ -619,6 +705,50 @@ int main() {
 	mul(l, u, a);
 	a.negate();
 	sum(m, a, sub);
+
+	//mul(m, pr, pr1);
+	//mul(s.a, f1);
+
+	//transpose(m);
+	//mul(m, pr, pr1);
+	//mul_t(s.a, f1);
+
+	//mul(u, pr, pr1);
+	//mul_u(s.lu, f1);
+
+	/*pr(3) = 115;
+	mul(l, pr, pr1);
+	for (int i = 0; i < pr1.size(); i++) f1[i] = pr1(i);
+	pr1 = pr;
+	mul_l_invert(s.lu, f1);*/
+
+	/*pr(3) = 115;
+	transpose(u);
+	mul(u, pr, pr1);
+	for (int i = 0; i < pr1.size(); i++) f1[i] = pr1(i);
+	pr1 = pr;
+	mul_u_invert_t(s.lu, f1);*/
+
+	/*pr(3) = 115;
+	mul(u, pr, pr1);
+	for (int i = 0; i < pr1.size(); i++) f1[i] = pr1(i);
+	pr1 = pr;
+	mul_u_invert(s.lu, f1);*/
+
+	/*pr(3) = 115;
+	transpose(l);
+	mul(l, pr, pr1);
+	for (int i = 0; i < pr1.size(); i++) f1[i] = pr1(i);
+	pr1 = pr;
+	mul_l_invert_t(s.lu, f1);*/
+
+	pr1 = pr;
+	for (int i = 0; i < s.f.size(); i++) pr1(i) = s.f[i];
+	//mul(s.a, s.f);
+	s.los2();
+	f1 = s.x;
+
+	for (int i = 0; i < f1.size(); i++) f1_m(i) = f1[i];
 
 	for (int i = 0; i < sub.height(); i++) {
 		for (size_t j = 0; j < sub.width(); j++) {
@@ -641,6 +771,14 @@ int main() {
 
 	fout << "sub:" << endl;
 	sub.save(fout);
+	fout << endl;
+
+	fout << "pr1_m:" << endl;
+	pr1.save(fout);
+	fout << endl;
+
+	fout << "pr1:" << endl;
+	f1_m.save(fout);
 	fout << endl;
 
 	fout.close();
