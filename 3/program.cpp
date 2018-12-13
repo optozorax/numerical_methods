@@ -99,7 +99,7 @@ struct matrix_iterator
 	}
 
 	matrix_iterator& operator++() {
-		if (!is_empty_line && j+1 < line_size && pos+1 == m.lineElemRow(line, j+1)) {
+		if (!is_empty_line && j+1 < m.lineElemStart(line) + line_size && pos+1 == m.lineElemRow(line, j+1-m.lineElemStart(line))) {
 			is_on_elem = true;
 			pos++;
 			j++;
@@ -110,7 +110,7 @@ struct matrix_iterator
 		return *this;
 	}
 
-	int getRow(void) const { return pos; }
+	int getpos(void) const { return pos; }
 protected:
 	bool is_on_elem, is_empty_line;
 	const matrix& m;
@@ -138,10 +138,15 @@ struct matrix_iterator_u : public matrix_iterator
 
 struct line_iterator
 {
-	line_iterator(const vector<pair<int, double>>& line, int pos) : line(line), i(0), pos(pos), is_on_elem(line.size() != 0) {}
+	line_iterator(const vector<pair<int, double>>& line) : line(line), i(0), pos(0), is_on_elem(line.size() != 0) {
+		if (line.size() != 0) {
+			pos = line[0].first;
+			is_on_elem = true;
+		}
+	}
 
 	line_iterator& operator++() {
-		if (line.size() != 0 && pos <= line.back().first && pos+1 == line[i+1].first) {
+		if (line.size() != 0 && pos+1 <= line.back().first && i + 1 < line.size() && pos+1 == line[i+1].first) {
 			is_on_elem = true;
 			pos++;
 			i++;
@@ -156,11 +161,23 @@ struct line_iterator
 		if (is_on_elem) return line[i].second;
 		else return 0;
 	}
+
+	int getpos(void) const { return pos; }
 protected:
 	const vector<pair<int, double>>& line;
 	int i, pos;
 	bool is_on_elem;
 };
+
+template<class T1, class T2>
+void synchronize_iterators(T1& i, T2& j) {
+	while (i.getpos() != j.getpos()) {
+		if (i.getpos() < j.getpos())
+			++i;
+		else
+			++j;
+	}
+}
 
 void mul_l_invert_t(const matrix& l, vector<double>& y_x) {
 
@@ -182,9 +199,8 @@ void mul_u(const matrix& u, vector<double>& y_x) {
 
 }
 
-void lu_decompose(const matrix& a, matrix& l, matrix& u) {
-	l.init(a.n);
-	u.init(a.n);
+void lu_decompose(const matrix& a, matrix& lu) {
+	lu.init(a.n);
 	for (int i = 0; i < a.n; ++i) {
 		// Считаем элементы матрицы L
 		vector<pair<int, double>> l_add, u_add;
@@ -193,14 +209,15 @@ void lu_decompose(const matrix& a, matrix& l, matrix& u) {
 			int iLineStart = a.lineStart(i);
 			for (int j = iLineStart; j < i; ++j, ++a_j) {
 				double sum = 0;
-				if (j != 0) {
-					line_iterator l_k(l_add, a_j.getRow());
-					matrix_iterator_u u_k(u, j);
-					for (int k = 0; k < j; ++k, ++l_k, ++u_k)
+				if (j != iLineStart) {
+					line_iterator l_k(l_add);
+					matrix_iterator_u u_k(lu, j);
+					synchronize_iterators(l_k, u_k);
+					for (int k = l_k.getpos(); k < j; ++k, ++l_k, ++u_k)
 						sum += (*l_k) * (*u_k);
 				}
 
-				double res = ((*a_j) - sum) / l.d[j];
+				double res = ((*a_j) - sum) / lu.d[j];
 				if (res != 0)
 					l_add.push_back({j, res});
 			}
@@ -213,13 +230,14 @@ void lu_decompose(const matrix& a, matrix& l, matrix& u) {
 			for (int j = iRowStart; j < i; ++j, ++a_j) {
 				double sum = 0;
 				if (j != 0) {
-					matrix_iterator_l l_k(l, j);
-					line_iterator u_k(u_add, a_j.getRow());
-					for (int k = 0; k < j; ++k, ++l_k, ++u_k)
+					matrix_iterator_l l_k(lu, j);
+					line_iterator u_k(u_add);
+					synchronize_iterators(l_k, u_k);
+					for (int k = l_k.getpos(); k < j; ++k, ++l_k, ++u_k)
 						sum += (*l_k) * (*u_k);
 				}
 
-				double res = ((*a_j) - sum) / u.d[j];
+				double res = ((*a_j) - sum) / lu.d[j];
 				if (res != 0) 
 					u_add.push_back({j, res});
 			}
@@ -249,36 +267,25 @@ void lu_decompose(const matrix& a, matrix& l, matrix& u) {
 			throw std::exception();
 
 		// Добавляем формат к обоим массивам
-		l.i[i+1] = l.i[i] + l_add.size();
+		lu.i[i+1] = lu.i[i] + l_add.size();
 		for (int j = 0; j < l_add.size(); ++j) {
-			l.j.push_back(l_add[j].first);
-			l.l.push_back(l_add[j].second);
-		}
-
-		u.i[i+1] = u.i[i] + u_add.size();
-		for (int j = 0; j < u_add.size(); ++j) {
-			u.j.push_back(u_add[j].first);
-			u.u.push_back(u_add[j].second);
+			lu.j.push_back(l_add[j].first);
+			lu.l.push_back(l_add[j].second);
+			lu.u.push_back(u_add[j].second);
 		}
 
 		// Считаем элементы диагонали
 		{
 			double sum = 0;
 			if (i != 0) {
-				matrix_iterator_l l_k(l, i);
-				matrix_iterator_u u_k(u, i);
-				for (int k = 0; k < i; ++k, ++l_k, ++u_k)
-					sum += (*l_k) * (*u_k);
+				for (int k = 0; k < l_add.size(); ++k)
+					sum += l_add[k].second * u_add[k].second;
 			}
 
 			double res = sqrt((a.d[i]) - sum);
-			l.d[i] = res;
-			u.d[i] = res;
+			lu.d[i] = res;
 		}
 	}
-
-	l.u.resize(l.l.size(), 0);
-	u.l.resize(u.u.size(), 0);
 }
 
 void mul(const matrix& a, vector<double>& x_y) {
@@ -352,7 +359,7 @@ void msg1() {
 }
 
 void msg2() {
-	lu_decompose(a, l, u);
+	lu_decompose(a, lu);
 
 	x.resize(n, 0); // x_0 = (0, 0, ...)
 
@@ -360,12 +367,12 @@ void msg2() {
 	mul(a, r); // r = A*x_0
 	for (int i = 0; i < n; ++i)
 		r[i] = f[i]-r[i];
-	mul_l_invert(l, r);
-	mul_l_invert_t(l, r);
+	mul_l_invert(lu, r);
+	mul_l_invert_t(lu, r);
 	mul_t(a, r);
-	mul_u_invert_t(u, r);
+	mul_u_invert_t(lu, r);
 
-	mul_u(u, x);
+	mul_u(lu, x);
 
 	z = r;
 	double rr = r*r;
@@ -374,12 +381,12 @@ void msg2() {
 	int i = 0;
 	while (true) {
 		t1 = z;
-		mul_u_invert(u, t1);
+		mul_u_invert(lu, t1);
 		mul(a, t1);
-		mul_l_invert(l, t1);
-		mul_l_invert_t(l, t1);
+		mul_l_invert(lu, t1);
+		mul_l_invert_t(lu, t1);
 		mul_t(a, t1);
-		mul_u_invert(u, t1);
+		mul_u_invert(lu, t1);
 		double alpha = (rr) / (t1*z);
 		for (int i = 0; i < n; ++i) {
 			x[i] += alpha * z[i];
@@ -400,7 +407,7 @@ void msg2() {
 }
 
 void msg3() {
-	lu_decompose(a, l, u);
+	lu_decompose(a, lu);
 
 	x.resize(n, 0); // x_0 = (0, 0, ...)
 
@@ -487,21 +494,21 @@ void los1() {
 }
 
 void los2() {
-	lu_decompose(a, l, u);
+	lu_decompose(a, lu);
 	x.resize(n, 0); // x_0 = (0, 0, ...)
 
 	r = x;
 	mul(a, r); // r = A*x_0
 	for (int i = 0; i < n; i++) // r = f - A*x_0
 		r[i] = f[i] - r[i];
-	mul_l_invert(l, r); // r = L^-1(f - A*x_0)
+	mul_l_invert(lu, r); // r = L^-1(f - A*x_0)
 
 	z = r;
-	mul_u_invert(u, z); // z = U^-1 r
+	mul_u_invert(lu, z); // z = U^-1 r
 
 	p = z;
 	mul(a, p); // p = A z
-	mul_l_invert(l, p); // p = L^-1 A z
+	mul_l_invert(lu, p); // p = L^-1 A z
 
 	double residual = r*r;
 
@@ -514,10 +521,10 @@ void los2() {
 			r[i] -= alpha * p[i];
 		}
 		t1 = r;
-		mul_u_invert(u, t1);
+		mul_u_invert(lu, t1);
 		t2 = t1;
 		mul(a, t2);
-		mul_l_invert(l, t2);
+		mul_l_invert(lu, t2);
 		double beta = -(p*t2) / pp;
 		for (int i = 0; i < n; ++i) {
 			z[i] = t1[i] + beta * z[i];
@@ -580,7 +587,7 @@ void los3() {
 int n, maxiter;
 double eps;
 
-matrix a, l, u;
+matrix a, lu;
 
 vector<double> f;
 
@@ -603,9 +610,12 @@ int main() {
 	Matrix m, l, u, a, sub;
 	s.a.toDense(m);
 
-	lu_decompose(s.a, s.l, s.u);
-	s.l.toDense(l);
-	s.u.toDense(u);
+	lu_decompose(s.a, s.lu);
+	matrix l_s = s.lu, u_s = s.lu;
+	l_s.u.clear(); l_s.u.resize(l_s.l.size(), 0);
+	u_s.l.clear(); u_s.l.resize(u_s.u.size(), 0);
+	l_s.toDense(l);
+	u_s.toDense(u);
 	mul(l, u, a);
 	a.negate();
 	sum(m, a, sub);
@@ -659,5 +669,5 @@ int main() {
 	cout << "Time: " << duration_cast<seconds>(t2-t1).count() << endl;
 	cout << s.x;*/
 
-	system("pause");
+	//system("pause");
 }
