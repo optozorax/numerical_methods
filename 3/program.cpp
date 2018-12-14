@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <chrono>
+#include <functional>
 #include <iomanip>
 
 #include "../1/matrix.h"
@@ -10,6 +11,7 @@
 using namespace std;
 
 ostream& operator<<(ostream& out, const vector<double>& x) {
+	out.precision(16);
 	out << "(";
 	for (int i = 0; i < x.size()-1; ++i)
 		out << x[i] << ", ";
@@ -370,10 +372,7 @@ void mul_invert(const vector<double>& d, vector<double>& x_y) {
 }
 
 double length(const vector<double>& mas) {
-	double sum = 0;
-	for (auto& i : mas)
-		sum += mas * mas;
-	return sqrt(sum);
+	return sqrt(mas*mas);
 }
 
 class SLAU
@@ -422,9 +421,12 @@ void read(string dir) {
 	x.resize(n);
 	t1.resize(n);
 	t2.resize(n);
+
+	is_log = true;
 }
 
 void msg1() {
+	x.clear();
 	x.resize(n, 0); // x_0 = (0, 0, ...)
 
 	r = x;
@@ -453,15 +455,14 @@ void msg1() {
 		double residual = sqrt(rr) / flen;
 		i++;
 
-		cout << "Iter: " << setw(4) << i << "\tResidual: " << residual << endl;
+		if (is_log) cout << "Iteration: " << setw(4) << i << ", Residual: " << setw(20) << setprecision(16) << residual << endl;
 		if (fabs(residual) < eps || i > maxiter)
 			break;
 	}
-
-	mul_u_invert(lu, x);
 }
 
 void msg2() {
+	x.clear();
 	lu_decompose(a, lu);
 
 	x.resize(n, 0); // x_0 = (0, 0, ...)
@@ -503,7 +504,7 @@ void msg2() {
 		double residual = sqrt(rr) / flen;
 		i++;
 
-		cout << "Iter: " << setw(4) << i << "\tResidual: " << residual << endl;
+		if (is_log) cout << "Iteration: " << setw(4) << i << ", Residual: " << setw(20) << setprecision(16) << residual << endl;
 		if (fabs(residual) < eps || i > maxiter)
 			break;
 	}
@@ -512,14 +513,13 @@ void msg2() {
 }
 
 void msg3() {
+	x.clear();
 	x.resize(n, 0); // x_0 = (0, 0, ...)
 
 	r = x;
 	mul(a, r); // r = A*x_0
 	for (int i = 0; i < n; ++i)
 		r[i] = f[i]-r[i];
-
-	mul(a.d, x);
 
 	z = r;
 	mul_invert(a.d, z);
@@ -549,15 +549,14 @@ void msg3() {
 		double residual = length(r) / flen;
 		i++;
 
-		cout << "Iter: " << setw(4) << i << "\tResidual: " << residual << endl;
+		if (is_log) cout << "Iteration: " << setw(4) << i << ", Residual: " << setw(20) << setprecision(16) << residual << endl;
 		if (fabs(residual) < eps || i > maxiter)
 			break;
 	}
-
-	mul_invert(a.d, x);
 }
 
 void los1() {
+	x.clear();
 	x.resize(n, 0); // x_0 = (0, 0, ...)
 
 	r = x;
@@ -571,6 +570,7 @@ void los1() {
 	mul(a, p); // p = A z
 
 	double residual = r*r;
+	double flen = sqrt(f*f);
 
 	int i = 0;
 	while (true) {
@@ -587,16 +587,18 @@ void los1() {
 			z[i] = r[i] + beta * z[i];
 			p[i] = t1[i] + beta * p[i];
 		}
-		residual -= alpha * alpha * pp;
+		//residual -= alpha * alpha * pp;
+		double residual = length(r) / flen;
 		i++;
 
-		cout << "Iter: " << setw(4) << i << "\tResidual: " << residual << endl;
+		if (is_log) cout << "Iteration: " << setw(4) << i << ", Residual: " << setw(20) << setprecision(16) << residual << endl;
 		if (fabs(residual) < eps || i > maxiter)
 			break;
 	}
 }
 
 void los2() {
+	x.clear();
 	lu_decompose(a, lu);
 	x.resize(n, 0); // x_0 = (0, 0, ...)
 
@@ -613,7 +615,8 @@ void los2() {
 	mul(a, p); // p = A z
 	mul_l_invert(lu, p); // p = L^-1 A z
 
-	double residual = r*r;
+	//double residual = r*r;
+	double flen = sqrt(f*f);
 
 	int i = 0;
 	while (true) {
@@ -633,16 +636,18 @@ void los2() {
 			z[i] = t1[i] + beta * z[i];
 			p[i] = t2[i] + beta * p[i];
 		}
-		residual -= alpha * alpha * pp;
+		//residual -= alpha * alpha * pp;
+		double residual = length(r) / flen;
 		i++;
 
-		cout << "Iter: " << setw(4) << i << "\tResidual: " << residual << endl;
+		if (is_log) cout << "Iteration: " << setw(4) << i << ", Residual: " << setw(20) << setprecision(16) << residual << endl;
 		if (fabs(residual) < eps || i > maxiter)
 			break;
 	}
 }
 
 void los3() {
+	x.clear();
 	x.resize(n, 0); // x_0 = (0, 0, ...)
 
 	r = x;
@@ -658,7 +663,8 @@ void los3() {
 	mul(a, p); // p = A z
 	mul_invert(a.d, p); // p = L^-1 A z
 
-	double residual = r*r;
+	//double residual = r*r;
+	double flen = sqrt(f*f);
 
 	int i = 0;
 	while (true) {
@@ -678,10 +684,11 @@ void los3() {
 			z[i] = t1[i] + beta * z[i];
 			p[i] = t2[i] + beta * p[i];
 		}
-		residual -= alpha * alpha * pp;
+		//residual -= alpha * alpha * pp;
+		double residual = length(r) / flen;
 		i++;
 
-		cout << "Iter: " << setw(4) << i << "\tResidual: " << residual << endl;
+		if (is_log) cout << "Iteration: " << setw(4) << i << ", Residual: " << setw(20) << setprecision(16) << residual << endl;
 		if (fabs(residual) < eps || i > maxiter)
 			break;
 	}
@@ -698,16 +705,11 @@ vector<double> r, z, p;
 
 vector<double> x, t1, t2;
 
+bool is_log;
+
 };
 
-int main() {
-	string dir;
-	cout << "Enter dir: ";
-	//cin >> dir;
-
-	SLAU s;
-	s.read(dir);
-
+void test(SLAU& s, string dir) {
 	ofstream fout(dir + "/matrix.txt");
 	vector<double> f1 = s.f;
 	Matrix m, l, u, a, sub;
@@ -761,11 +763,10 @@ int main() {
 	pr1 = pr;
 	mul_l_invert_t(s.lu, f1);*/
 
-	pr1 = pr;
+	/*pr1 = pr;
 	for (int i = 0; i < s.f.size(); i++) pr1(i) = s.f[i];
-	//mul(s.a, s.f);
-	s.los2();
-	f1 = s.x;
+	s.msg1();
+	f1 = s.x;*/
 
 	for (int i = 0; i < f1.size(); i++) f1_m(i) = f1[i];
 
@@ -801,30 +802,48 @@ int main() {
 	fout << endl;
 
 	fout.close();
+}
 
+void test_method(string name, function<void(SLAU*)> f, SLAU& s) {
+	cout << name << ":" << endl;
+	s.is_log = false;
+	int count = 100;
+	double time = 0;
+	chrono::high_resolution_clock::time_point t1, t2;
+	for (int i = 0; i < count; i++) {
+		t1 = chrono::high_resolution_clock::now();
+		f(&s);
+		t2 = chrono::high_resolution_clock::now();
+		time += chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
+		if (time / 1000.0 > 500.0) count = i+1;
+	}
+	time /= count;
+	s.is_log = true;
+	f(&s);
+	cout << "Time: " << time / 1000 << " ms" << endl;
+	cout << "X: " << s.x << endl << endl;
+}
 
-	/*chrono::high_resolution_clock::time_point t1, t2;
+int main() {
+	string dir; 
+	bool is_write_to_file = true;
+	cout << "Enter dir: ";
+	//cin >> dir;
+	dir = "4545";
+	cout << "Is write to file? (0 or 1): ";
+	//cin >> is_write_to_file;
 
-	cout << "LOS 1:" << endl;
-	t1 = chrono::high_resolution_clock::now();
-	s.los1();
-	t2 = chrono::high_resolution_clock::now();
-	cout << "Time: " << chrono::high_resolution_clock::duration_cast<chrono::high_resolution_clock::seconds>(t2-t1).count() << endl;
-	cout << s.x;
+	if (is_write_to_file) freopen((dir + "/res.txt").c_str(), "w", stdout);
 
-	cout << "LOS 2:" << endl;
-	t1 = now();
-	s.los2();
-	t2 = now();
-	cout << "Time: " << duration_cast<seconds>(t2-t1).count() << endl;
-	cout << s.x;
+	SLAU s;
+	s.read(dir);
 
-	cout << "LOS 3:" << endl;
-	t1 = now();
-	s.los3();
-	t2 = now();
-	cout << "Time: " << duration_cast<seconds>(t2-t1).count() << endl;
-	cout << s.x;*/
+	test_method("MSG", &SLAU::msg1, s);
+	test_method("MSG LUsq", &SLAU::msg2, s);
+	test_method("MSG D", &SLAU::msg3, s);
+	test_method("LOS", &SLAU::los1, s);
+	test_method("LOS LUsq", &SLAU::los2, s);
+	test_method("LOS D", &SLAU::los3, s);
 
-	//system("pause");
+	if (!is_write_to_file) system("pause");
 }
