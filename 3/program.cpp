@@ -500,7 +500,7 @@ void read(string dir) {
 	is_log = true;
 }
 
-int msg1() {
+pair<int, double> msg1() {
 	x.clear();
 	x.resize(n, 0); // x_0 = (0, 0, ...)
 
@@ -512,6 +512,7 @@ int msg1() {
 	z = r;
 	double rr = r*r;
 	double flen = sqrt(f*f);
+	double residual;
 
 	int i = 0;
 	while (true) {
@@ -527,7 +528,7 @@ int msg1() {
 		rr = rr2;
 		for (int i = 0; i < n; ++i)
 			z[i] = r[i] + beta * z[i];
-		double residual = sqrt(rr) / flen;
+		residual = sqrt(rr) / flen;
 		i++;
 
 		if (is_log) cout << "Iteration: " << setw(4) << i << ", Residual: " << setw(20) << setprecision(16) << residual << endl;
@@ -535,10 +536,10 @@ int msg1() {
 			break;
 	}
 
-	return i;
+	return {i, residual};
 }
 
-int msg2() {
+pair<int, double> msg2() {
 	x.clear();
 	lu_decompose(a, lu);
 
@@ -558,6 +559,7 @@ int msg2() {
 	z = r;
 	double rr = r*r;
 	double flen = sqrt(f*f);
+	double residual;
 
 	int i = 0;
 	while (true) {
@@ -578,7 +580,7 @@ int msg2() {
 		rr = rr2;
 		for (int i = 0; i < n; ++i)
 			z[i] = r[i] + beta * z[i];
-		double residual = sqrt(rr) / flen;
+		residual = sqrt(rr) / flen;
 		i++;
 
 		if (is_log) cout << "Iteration: " << setw(4) << i << ", Residual: " << setw(20) << setprecision(16) << residual << endl;
@@ -588,10 +590,10 @@ int msg2() {
 
 	mul_u_invert(lu, x);
 
-	return i;
+	return {i, residual};
 }
 
-int msg3() {
+pair<int, double> msg3() {
 	x.clear();
 	x.resize(n, 0); // x_0 = (0, 0, ...)
 
@@ -608,6 +610,7 @@ int msg3() {
 	mul_invert(a.d, t1);
 	rr = t1*r;
 	double flen = sqrt(f*f);
+	double residual;
 
 	int i = 0;
 	while (true) {
@@ -625,7 +628,7 @@ int msg3() {
 		rr = rr2;
 		for (int i = 0; i < n; ++i)
 			z[i] = t1[i] + beta * z[i];
-		double residual = length(r) / flen;
+		residual = length(r) / flen;
 		i++;
 
 		if (is_log) cout << "Iteration: " << setw(4) << i << ", Residual: " << setw(20) << setprecision(16) << residual << endl;
@@ -633,10 +636,10 @@ int msg3() {
 			break;
 	}
 
-	return i;
+	return {i, residual};
 }
 
-int los1() {
+pair<int, double> los1() {
 	x.clear();
 	x.resize(n, 0); // x_0 = (0, 0, ...)
 
@@ -650,8 +653,9 @@ int los1() {
 	p = z;
 	mul(a, p); // p = A z
 
-	double residual = r*r;
+	//double residual = r*r;
 	double flen = sqrt(f*f);
+	double residual;
 
 	int i = 0;
 	while (true) {
@@ -669,7 +673,7 @@ int los1() {
 			p[i] = t1[i] + beta * p[i];
 		}
 		//residual -= alpha * alpha * pp;
-		double residual = length(r) / flen;
+		residual = length(r) / flen;
 		i++;
 
 		if (is_log) cout << "Iteration: " << setw(4) << i << ", Residual: " << setw(20) << setprecision(16) << residual << endl;
@@ -677,10 +681,10 @@ int los1() {
 			break;
 	}
 
-	return i;
+	return {i, residual};
 }
 
-int los2() {
+pair<int, double> los2() {
 	x.clear();
 	lu_decompose(a, lu);
 	x.resize(n, 0); // x_0 = (0, 0, ...)
@@ -700,6 +704,7 @@ int los2() {
 
 	//double residual = r*r;
 	double flen = sqrt(f*f);
+	double residual;
 
 	int i = 0;
 	while (true) {
@@ -720,7 +725,7 @@ int los2() {
 			p[i] = t2[i] + beta * p[i];
 		}
 		//residual -= alpha * alpha * pp;
-		double residual = length(r) / flen;
+		residual = length(r) / flen;
 		i++;
 
 		if (is_log) cout << "Iteration: " << setw(4) << i << ", Residual: " << setw(20) << setprecision(16) << residual << endl;
@@ -728,10 +733,10 @@ int los2() {
 			break;
 	}
 
-	return i;
+	return {i, residual};
 }
 
-int los3() {
+pair<int, double> los3() {
 	x.clear();
 	x.resize(n, 0); // x_0 = (0, 0, ...)
 
@@ -750,6 +755,7 @@ int los3() {
 
 	//double residual = r*r;
 	double flen = sqrt(f*f);
+	double residual;
 
 	int i = 0;
 	while (true) {
@@ -770,7 +776,7 @@ int los3() {
 			p[i] = t2[i] + beta * p[i];
 		}
 		//residual -= alpha * alpha * pp;
-		double residual = length(r) / flen;
+		residual = length(r) / flen;
 		i++;
 
 		if (is_log) cout << "Iteration: " << setw(4) << i << ", Residual: " << setw(20) << setprecision(16) << residual << endl;
@@ -778,7 +784,7 @@ int los3() {
 			break;
 	}
 
-	return i;
+	return {i, residual};
 }
 
 int n, maxiter;
@@ -903,26 +909,30 @@ string print_time(double time) {
 	return sout.str();
 }
 
-void test_method(string name, function<int(SLAU*)> f, SLAU& s) {
+void test_method(string name, function<pair<int, double>(SLAU*)> f, SLAU& s, bool is_write_each_iteration) {
 	cout << name << ":" << endl;
+
 	s.is_log = false;
 	int count = 100;
 	double time = 0;
-	int iters;
+	pair<int, double> temp_res;
 	chrono::high_resolution_clock::time_point t1, t2;
 	for (int i = 0; i < count; i++) {
 		t1 = chrono::high_resolution_clock::now();
-		iters = f(&s);
+		temp_res = f(&s);
 		t2 = chrono::high_resolution_clock::now();
 		time += chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
 		if (time / 1000.0 > 500.0) count = i+1;
 	}
 	time /= count;
-	s.is_log = true;
-	if (iters >= s.maxiter)
-		cout << "Method diverges" << endl;
-	else 
+
+	if (is_write_each_iteration) {
+		s.is_log = true;
 		f(&s);
+	} else {
+		cout << "Iterations: " << temp_res.first << ", Residual: " << temp_res.second;
+	}
+
 	cout << "Time: " << print_time(time) << endl;
 	cout << "X: " << s.x << endl << endl;
 }
@@ -984,24 +994,27 @@ void make_gilbert(int size) {
 int main() {
 	//for (int i = 0; i < 16; ++i) make_gilbert(i);
 
-	string dir = "4545"; 
+	string dir = "test1"; 
 	bool is_write_to_file = true;
+	bool is_write_each_iteration = true;
 	cout << "Enter dir: ";
 	cin >> dir;
 	cout << "Is write to file? (0 or 1): ";
 	cin >> is_write_to_file;
+	cout << "Is write each iteration? (0 or 1): ";
+	cin >> is_write_each_iteration;
 
 	if (is_write_to_file) freopen((dir + "/res.txt").c_str(), "w", stdout);
 
 	SLAU s;
 	s.read(dir);
 
-	test_method("MSG", &SLAU::msg1, s);
-	test_method("MSG LUsq", &SLAU::msg2, s);
-	test_method("MSG D", &SLAU::msg3, s);
-	test_method("LOS", &SLAU::los1, s);
-	test_method("LOS LUsq", &SLAU::los2, s);
-	test_method("LOS D", &SLAU::los3, s);
+	test_method("MSG", &SLAU::msg1, s, is_write_each_iteration);
+	test_method("MSG LUsq", &SLAU::msg2, s, is_write_each_iteration);
+	test_method("MSG D", &SLAU::msg3, s, is_write_each_iteration);
+	test_method("LOS", &SLAU::los1, s, is_write_each_iteration);
+	test_method("LOS LUsq", &SLAU::los2, s, is_write_each_iteration);
+	test_method("LOS D", &SLAU::los3, s, is_write_each_iteration);
 
 	if (!is_write_to_file) system("pause");
 }
