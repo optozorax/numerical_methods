@@ -84,6 +84,7 @@ bool transpose(Matrix& a);
 
 bool calcLDL(const Matrix& a, Matrix& l, Matrix& d);
 bool calcLUsq(const Matrix& a, Matrix& l, Matrix& u);
+bool calcLUsq_partial(const Matrix& a, Matrix& l, Matrix& u);
 bool calcGaussianReverseOrder(const Matrix& l, const Matrix& y, Matrix& x);
 bool calcGaussianFrontOrder(const Matrix& l, const Matrix& y, Matrix& x);
 bool calcGaussianCentralOrder(const Matrix& d, const Matrix& y, Matrix& x);

@@ -388,6 +388,45 @@ bool calcLUsq(const Matrix& a, Matrix& l, Matrix& u) {
 }
 
 //-----------------------------------------------------------------------------
+bool calcLUsq_partial(const Matrix& a, Matrix& l, Matrix& u) {
+	if (a.width() != a.height())
+		return false;
+
+	l.resize(a.width(), a.height(), 0);
+	u.resize(a.width(), a.height(), 0);	
+
+	for (int i = 0; i < a.height(); ++i) {
+		// Считаем элементы матрицы L
+		for (int j = 0; j < i; ++j) if (a(i, j) != 0) {
+			real sum = 0;
+			for (int k = 0; k < j; ++k)
+				sum += l(i, k) * u(k, j);
+
+			l(i, j) = (a(i, j) - sum) / l(j, j);
+		}
+
+		// Считаем элементы матрицы U
+		for (int j = 0; j < i; ++j) if (a(j, i) != 0) {
+			real sum = 0;
+			for (int k = 0; k < j; ++k)
+				sum += l(j, k) * u(k, i);
+
+			u(j, i) = (a(j, i) - sum) / u(j, j);
+		}
+
+		// Считаем диагональный элемент
+		real sum = 0;
+		for (int k = 0; k < i; ++k)
+			sum += l(i, k) * u(k, i);
+
+		l(i, i) = sqrt(a(i, i) - sum);
+		u(i, i) = l(i, i);
+	}
+	
+	return true;
+}
+
+//-----------------------------------------------------------------------------
 bool calcLDL(const Matrix& a, Matrix& l, Matrix& d) {
 	// l * d * l^T = rus_a
 	if (!a.isSymmetric())

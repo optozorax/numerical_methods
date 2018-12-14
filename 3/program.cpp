@@ -172,6 +172,9 @@ void synchronize_iterators(T1& i, T2& j) {
 }
 
 void lu_decompose(const matrix& a, matrix& lu) {
+	//#define FULL_FACTORIZATION
+
+	#ifdef FULL_FACTORIZATION
 	lu.init(a.n);
 	for (int i = 0; i < a.n; ++i) {
 		// Считаем элементы матрицы L
@@ -258,6 +261,77 @@ void lu_decompose(const matrix& a, matrix& lu) {
 			lu.d[i] = res;
 		}
 	}
+	#endif 
+
+	#ifndef FULL_FACTORIZATION
+	lu = a;
+	for (int i = 0; i < lu.n; ++i) {
+		// Заполняем нижний треугольник
+		int line_start = lu.lineElemStart(i);
+		int line_end = lu.lineElemStart(i+1);
+		for (int j = line_start; j < line_end; ++j) {
+			double sum = 0;
+
+			int row = lu.j[j];
+			int row_start = lu.lineElemStart(row);
+			int row_end = lu.lineElemStart(row+1);
+
+			int kl = line_start;
+			int ku = row_start;
+			
+			while (kl < line_end && ku < row_end) {
+				if (lu.j[kl] == lu.j[ku]) { // Совпадают столбцы
+					sum += lu.l[kl] * lu.u[ku];
+					ku++;
+					kl++;
+				} else if (lu.j[kl] < lu.j[ku]) {
+					ku++;
+				} else {
+					kl++;
+				}
+			}
+
+			lu.l[j] = (lu.l[j] - sum) / lu.d[row];
+		}
+
+		// Заполняем верхний треугольник
+		int row_start = lu.lineElemStart(i);
+		int row_end = lu.lineElemStart(i+1);
+		for (int j = line_start; j < line_end; ++j) {
+			double sum = 0;
+			
+			int line = lu.j[j];
+			int line_start = lu.lineElemStart(line);
+			int line_end = lu.lineElemStart(line+1);
+
+			int kl = line_start;
+			int ku = row_start;
+			
+			while (kl < line_end && ku < row_end) {
+				if (lu.j[kl] == lu.j[ku]) { // Совпадают столбцы
+					sum += lu.l[kl] * lu.u[ku];
+					ku++;
+					kl++;
+				} else if (lu.j[kl] < lu.j[ku]) {
+					ku++;
+				} else {
+					kl++;
+				}
+			}
+
+			lu.u[j] = (lu.u[j] - sum) / lu.d[line];
+		}
+
+		// Расчитываем диагональный элемент
+		double sum = 0;
+		int line_row_start = lu.lineElemStart(i);
+		int line_row_end = lu.lineElemStart(i+1);
+		for (int j = line_row_start; j < line_row_end; ++j)
+			sum += lu.l[j] * lu.u[j];
+
+		lu.d[i] = sqrt(lu.d[i] - sum);
+	}
+	#endif
 }
 
 void mul(const matrix& a, vector<double>& x_y) {
@@ -740,6 +814,22 @@ void test(SLAU& s, string dir) {
 	a.negate();
 	sum(m, a, sub);
 
+	fout << "m:" << endl;
+	m.save(fout);
+	fout << endl;
+
+	fout << "l:" << endl;
+	l.save(fout);
+	fout << endl;
+
+	fout << "u:" << endl;
+	u.save(fout);
+	fout << endl;
+
+	fout << "sub:" << endl;
+	sub.save(fout);
+	fout << endl;
+
 	//mul(m, pr, pr1);
 	//mul(s.a, f1);
 
@@ -781,7 +871,7 @@ void test(SLAU& s, string dir) {
 	s.msg1();
 	f1 = s.x;*/
 
-	for (int i = 0; i < f1.size(); i++) f1_m(i) = f1[i];
+	/*for (int i = 0; i < f1.size(); i++) f1_m(i) = f1[i];
 
 	for (int i = 0; i < sub.height(); i++) {
 		for (size_t j = 0; j < sub.width(); j++) {
@@ -790,29 +880,13 @@ void test(SLAU& s, string dir) {
 		}
 	}
 
-	fout << "m:" << endl;
-	m.save(fout);
-	fout << endl;
-
-	fout << "l:" << endl;
-	l.save(fout);
-	fout << endl;
-
-	fout << "u:" << endl;
-	u.save(fout);
-	fout << endl;
-
-	fout << "sub:" << endl;
-	sub.save(fout);
-	fout << endl;
-
 	fout << "pr1_m:" << endl;
 	pr1.save(fout);
 	fout << endl;
 
 	fout << "pr1:" << endl;
 	f1_m.save(fout);
-	fout << endl;
+	fout << endl;*/
 
 	fout.close();
 }
