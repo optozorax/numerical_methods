@@ -3,6 +3,7 @@
 #include <fstream>
 #include <chrono>
 #include <functional>
+#include <sstream>
 #include <iomanip>
 
 #include "../1/matrix.h"
@@ -425,7 +426,7 @@ void read(string dir) {
 	is_log = true;
 }
 
-void msg1() {
+int msg1() {
 	x.clear();
 	x.resize(n, 0); // x_0 = (0, 0, ...)
 
@@ -459,9 +460,11 @@ void msg1() {
 		if (fabs(residual) < eps || i > maxiter)
 			break;
 	}
+
+	return i;
 }
 
-void msg2() {
+int msg2() {
 	x.clear();
 	lu_decompose(a, lu);
 
@@ -510,9 +513,11 @@ void msg2() {
 	}
 
 	mul_u_invert(lu, x);
+
+	return i;
 }
 
-void msg3() {
+int msg3() {
 	x.clear();
 	x.resize(n, 0); // x_0 = (0, 0, ...)
 
@@ -553,9 +558,11 @@ void msg3() {
 		if (fabs(residual) < eps || i > maxiter)
 			break;
 	}
+
+	return i;
 }
 
-void los1() {
+int los1() {
 	x.clear();
 	x.resize(n, 0); // x_0 = (0, 0, ...)
 
@@ -595,9 +602,11 @@ void los1() {
 		if (fabs(residual) < eps || i > maxiter)
 			break;
 	}
+
+	return i;
 }
 
-void los2() {
+int los2() {
 	x.clear();
 	lu_decompose(a, lu);
 	x.resize(n, 0); // x_0 = (0, 0, ...)
@@ -644,9 +653,11 @@ void los2() {
 		if (fabs(residual) < eps || i > maxiter)
 			break;
 	}
+
+	return i;
 }
 
-void los3() {
+int los3() {
 	x.clear();
 	x.resize(n, 0); // x_0 = (0, 0, ...)
 
@@ -692,6 +703,8 @@ void los3() {
 		if (fabs(residual) < eps || i > maxiter)
 			break;
 	}
+
+	return i;
 }
 
 int n, maxiter;
@@ -804,34 +817,105 @@ void test(SLAU& s, string dir) {
 	fout.close();
 }
 
-void test_method(string name, function<void(SLAU*)> f, SLAU& s) {
+string print_time(double time) {
+	stringstream sout;
+	if (time > 1000 * 1000) {
+		sout << time / (1000 * 1000) << " s";
+	} else if (time > 1000) {
+		sout << time / (1000) << " ms";
+	} else {
+		sout << time << " mcs";
+	}
+	return sout.str();
+}
+
+void test_method(string name, function<int(SLAU*)> f, SLAU& s) {
 	cout << name << ":" << endl;
 	s.is_log = false;
 	int count = 100;
 	double time = 0;
+	int iters;
 	chrono::high_resolution_clock::time_point t1, t2;
 	for (int i = 0; i < count; i++) {
 		t1 = chrono::high_resolution_clock::now();
-		f(&s);
+		iters = f(&s);
 		t2 = chrono::high_resolution_clock::now();
 		time += chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
 		if (time / 1000.0 > 500.0) count = i+1;
 	}
 	time /= count;
 	s.is_log = true;
-	f(&s);
-	cout << "Time: " << time / 1000 << " ms" << endl;
+	if (iters >= s.maxiter)
+		cout << "Method diverges" << endl;
+	else 
+		f(&s);
+	cout << "Time: " << print_time(time) << endl;
 	cout << "X: " << s.x << endl << endl;
 }
 
+void make_gilbert(int size) {
+	Matrix g;
+	generateGilbertMatrix(size, g);
+	Vector x, y;
+	x.generate(size);
+	mul(g, x, y);
+
+	string dir = "gilbert" + to_string(size);
+	system(("mkdir " + dir).c_str());
+	ofstream fout;
+	fout.precision(16);
+
+	fout.open(dir + "/kuslau.txt");
+	fout << size << " " << 1000 << " " << 1e-13;
+	fout.close();
+
+	fout.open(dir + "/di.txt");
+	for (int i = 0; i < size; ++i)
+		fout << double(1.0)/double((i+1)+(i+1)-1) << " ";
+	fout.close();
+
+	fout.open(dir + "/pr.txt");
+	for (int i = 0; i < size; ++i)
+		fout << y(i) << " ";
+	fout.close();
+
+	fout.open(dir + "/ig.txt");
+	int sum = 1;
+	fout << sum << " ";
+	for (int i = 0; i < size; ++i) {
+		sum += i;
+		fout << sum << " ";
+	}
+	fout.close();
+
+	fout.open(dir + "/jg.txt");
+	for (int i = 0; i < size; ++i)
+		for (int j = 0; j < i; ++j)
+			fout << j+1 << " ";	
+	fout.close();
+
+	fout.open(dir + "/ggl.txt");
+	for (int i = 0; i < size; ++i)
+		for (int j = 0; j < i; ++j)
+			fout << double(1.0)/double((i+1)+(j+1)-1) << " ";	
+	fout.close();
+
+	fout.open(dir + "/ggu.txt");
+	for (int i = 0; i < size; ++i)
+		for (int j = 0; j < i; ++j)
+			fout << double(1.0)/double((i+1)+(j+1)-1) << " ";	
+	fout.close();
+}
+
 int main() {
-	string dir; 
+	//for (int i = 0; i < 16; ++i) make_gilbert(i);
+
+	string dir = "4545"; 
 	bool is_write_to_file = true;
 	cout << "Enter dir: ";
-	//cin >> dir;
-	dir = "4545";
+	cin >> dir;
 	cout << "Is write to file? (0 or 1): ";
-	//cin >> is_write_to_file;
+	cin >> is_write_to_file;
 
 	if (is_write_to_file) freopen((dir + "/res.txt").c_str(), "w", stdout);
 
