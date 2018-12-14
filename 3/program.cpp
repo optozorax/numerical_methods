@@ -11,15 +11,23 @@
 
 using namespace std;
 
+//#define FULL_FACTORIZATION
+
+//-----------------------------------------------------------------------------
 ostream& operator<<(ostream& out, const vector<double>& x) {
 	out.precision(16);
 	out << "(";
-	for (int i = 0; i < x.size()-1; ++i)
-		out << x[i] << ", ";
-	out << x.back() << ")";
+	if (x.size() != 0) {
+		for (int i = 0; i < x.size() - 1; ++i)
+			out << x[i] << ", ";
+		out << x.back() << ")";
+	} else {
+		out << ")";
+	}
 	return out;
 }
 
+//-----------------------------------------------------------------------------
 double operator*(const vector<double>& a, const vector<double>& b) {
 	double sum = 0;
 	for (int i = 0; i < a.size(); ++i)
@@ -27,6 +35,32 @@ double operator*(const vector<double>& a, const vector<double>& b) {
 	return sum;
 }
 
+//-----------------------------------------------------------------------------
+double length(const vector<double>& mas) {
+	return sqrt(mas*mas);
+}
+
+//-----------------------------------------------------------------------------
+vector<double> to(const Vector& a) {
+	vector<double> result(a.size());
+	for (int i = 0; i < a.size(); ++i)
+		result[i] = a(i);
+	return result;
+}
+
+//-----------------------------------------------------------------------------
+Vector to(const vector<double>& a) {
+	Vector result(a.size());
+	for (int i = 0; i < a.size(); ++i)
+		result(i) = a[i];
+	return result;
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
 struct matrix
 {
 	int n;
@@ -71,6 +105,12 @@ struct matrix
 		return i[line+1]-i[line]; 
 	}
 };
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+#ifdef FULL_FACTORIZATION
 
 struct matrix_iterator
 {
@@ -171,9 +211,9 @@ void synchronize_iterators(T1& i, T2& j) {
 	}
 }
 
-void lu_decompose(const matrix& a, matrix& lu) {
-	//#define FULL_FACTORIZATION
+#endif
 
+void lu_decompose(const matrix& a, matrix& lu) {
 	#ifdef FULL_FACTORIZATION
 	lu.init(a.n);
 	for (int i = 0; i < a.n; ++i) {
@@ -279,19 +319,19 @@ void lu_decompose(const matrix& a, matrix& lu) {
 			int kl = line_start;
 			int ku = row_start;
 			
-			while (kl < line_end && ku < row_end) {
+			while (kl < j && ku < row_end) {
 				if (lu.j[kl] == lu.j[ku]) { // Совпадают столбцы
 					sum += lu.l[kl] * lu.u[ku];
 					ku++;
 					kl++;
 				} else if (lu.j[kl] < lu.j[ku]) {
-					ku++;
-				} else {
 					kl++;
+				} else {
+					ku++;
 				}
 			}
 
-			lu.l[j] = (lu.l[j] - sum) / lu.d[row];
+			lu.l[j] = (a.l[j] - sum) / lu.d[row];
 		}
 
 		// Заполняем верхний треугольник
@@ -307,19 +347,19 @@ void lu_decompose(const matrix& a, matrix& lu) {
 			int kl = line_start;
 			int ku = row_start;
 			
-			while (kl < line_end && ku < row_end) {
+			while (kl < line_end && ku < j) {
 				if (lu.j[kl] == lu.j[ku]) { // Совпадают столбцы
 					sum += lu.l[kl] * lu.u[ku];
 					ku++;
 					kl++;
 				} else if (lu.j[kl] < lu.j[ku]) {
-					ku++;
-				} else {
 					kl++;
+				} else {
+					ku++;
 				}
 			}
 
-			lu.u[j] = (lu.u[j] - sum) / lu.d[line];
+			lu.u[j] = (a.u[j] - sum) / lu.d[line];
 		}
 
 		// Расчитываем диагональный элемент
@@ -329,11 +369,16 @@ void lu_decompose(const matrix& a, matrix& lu) {
 		for (int j = line_row_start; j < line_row_end; ++j)
 			sum += lu.l[j] * lu.u[j];
 
-		lu.d[i] = sqrt(lu.d[i] - sum);
+		lu.d[i] = sqrt(a.d[i] - sum);
 	}
 	#endif
 }
 
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
 void mul(const matrix& a, vector<double>& x_y) {
 	vector<double> result(a.n, 0);
 
@@ -353,6 +398,7 @@ void mul(const matrix& a, vector<double>& x_y) {
 	x_y = result;
 }
 
+//-----------------------------------------------------------------------------
 void mul_t(const matrix& a, vector<double>& x_y) {
 	vector<double> result(a.n, 0);
 
@@ -372,6 +418,7 @@ void mul_t(const matrix& a, vector<double>& x_y) {
 	x_y = result;
 }
 
+//-----------------------------------------------------------------------------
 void mul_l_invert_t(const matrix& l, vector<double>& y_x) {
 	for (int i = l.n - 1; i >= 0; i--) {
 		int start = l.lineElemStart(i);
@@ -383,6 +430,7 @@ void mul_l_invert_t(const matrix& l, vector<double>& y_x) {
 	}
 }
 
+//-----------------------------------------------------------------------------
 void mul_u_invert_t(const matrix& u, vector<double>& y_x) {
 	for (int i = 0; i < u.n; ++i) {
 		int start = u.lineElemStart(i);
@@ -395,6 +443,7 @@ void mul_u_invert_t(const matrix& u, vector<double>& y_x) {
 	}
 }
 
+//-----------------------------------------------------------------------------
 void mul_l_invert(const matrix& l, vector<double>& y_x) {
 	for (int i = 0; i < l.n; ++i) {
 		int start = l.lineElemStart(i);
@@ -407,6 +456,7 @@ void mul_l_invert(const matrix& l, vector<double>& y_x) {
 	}
 }
 
+//-----------------------------------------------------------------------------
 void mul_u_invert(const matrix& u, vector<double>& y_x) {
 	for (int i = u.n-1; i >= 0; i--) {
 		int start = u.lineElemStart(i);
@@ -418,6 +468,7 @@ void mul_u_invert(const matrix& u, vector<double>& y_x) {
 	}
 }
 
+//-----------------------------------------------------------------------------
 void mul_u(const matrix& u, vector<double>& x_y) {
 	vector<double> result(u.n, 0);
 
@@ -436,24 +487,28 @@ void mul_u(const matrix& u, vector<double>& x_y) {
 	x_y = result;
 }
 
+//-----------------------------------------------------------------------------
 void mul(const vector<double>& d, vector<double>& x_y) {
 	for (int i = 0; i < d.size(); i++)
 		x_y[i] *= d[i];
 }
 
+//-----------------------------------------------------------------------------
 void mul_invert(const vector<double>& d, vector<double>& x_y) {
 	for (int i = 0; i < d.size(); i++)
 		x_y[i] /= d[i];
 }
 
-double length(const vector<double>& mas) {
-	return sqrt(mas*mas);
-}
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 
+//-----------------------------------------------------------------------------
 class SLAU
 {
 public:
 
+//-----------------------------------------------------------------------------
 void read(string dir) {
 	ifstream fin;
 
@@ -500,12 +555,13 @@ void read(string dir) {
 	is_log = true;
 }
 
+//-----------------------------------------------------------------------------
 pair<int, double> msg1() {
 	x.clear();
-	x.resize(n, 0); // x_0 = (0, 0, ...)
+	x.resize(n, 1);
 
 	r = x;
-	mul(a, r); // r = A*x_0
+	mul(a, r);
 	for (int i = 0; i < n; ++i)
 		r[i] = f[i]-r[i];
 
@@ -539,14 +595,15 @@ pair<int, double> msg1() {
 	return {i, residual};
 }
 
+//-----------------------------------------------------------------------------
 pair<int, double> msg2() {
-	x.clear();
 	lu_decompose(a, lu);
 
-	x.resize(n, 0); // x_0 = (0, 0, ...)
+	x.clear();
+	x.resize(n, 1);
 
 	r = x;
-	mul(a, r); // r = A*x_0
+	mul(a, r);
 	for (int i = 0; i < n; ++i)
 		r[i] = f[i]-r[i];
 	mul_l_invert(lu, r);
@@ -593,12 +650,13 @@ pair<int, double> msg2() {
 	return {i, residual};
 }
 
+//-----------------------------------------------------------------------------
 pair<int, double> msg3() {
 	x.clear();
-	x.resize(n, 0); // x_0 = (0, 0, ...)
+	x.resize(n, 1);
 
 	r = x;
-	mul(a, r); // r = A*x_0
+	mul(a, r);
 	for (int i = 0; i < n; ++i)
 		r[i] = f[i]-r[i];
 
@@ -639,21 +697,21 @@ pair<int, double> msg3() {
 	return {i, residual};
 }
 
+//-----------------------------------------------------------------------------
 pair<int, double> los1() {
 	x.clear();
-	x.resize(n, 0); // x_0 = (0, 0, ...)
+	x.resize(n, 1);
 
 	r = x;
-	mul(a, r); // r = A*x_0
-	for (int i = 0; i < n; i++) // r = f - A*x_0
+	mul(a, r);
+	for (int i = 0; i < n; i++)
 		r[i] = f[i] - r[i]; 
 
 	z = r;
 
 	p = z;
-	mul(a, p); // p = A z
+	mul(a, p);
 
-	//double residual = r*r;
 	double flen = sqrt(f*f);
 	double residual;
 
@@ -672,7 +730,6 @@ pair<int, double> los1() {
 			z[i] = r[i] + beta * z[i];
 			p[i] = t1[i] + beta * p[i];
 		}
-		//residual -= alpha * alpha * pp;
 		residual = length(r) / flen;
 		i++;
 
@@ -684,25 +741,25 @@ pair<int, double> los1() {
 	return {i, residual};
 }
 
+//-----------------------------------------------------------------------------
 pair<int, double> los2() {
-	x.clear();
 	lu_decompose(a, lu);
-	x.resize(n, 0); // x_0 = (0, 0, ...)
+	x.clear();
+	x.resize(n, 1);
 
 	r = x;
-	mul(a, r); // r = A*x_0
-	for (int i = 0; i < n; i++) // r = f - A*x_0
+	mul(a, r);
+	for (int i = 0; i < n; i++)
 		r[i] = f[i] - r[i];
-	mul_l_invert(lu, r); // r = L^-1(f - A*x_0)
+	mul_l_invert(lu, r);
 
 	z = r;
-	mul_u_invert(lu, z); // z = U^-1 r
+	mul_u_invert(lu, z);
 
 	p = z;
-	mul(a, p); // p = A z
-	mul_l_invert(lu, p); // p = L^-1 A z
+	mul(a, p);
+	mul_l_invert(lu, p);
 
-	//double residual = r*r;
 	double flen = sqrt(f*f);
 	double residual;
 
@@ -724,7 +781,6 @@ pair<int, double> los2() {
 			z[i] = t1[i] + beta * z[i];
 			p[i] = t2[i] + beta * p[i];
 		}
-		//residual -= alpha * alpha * pp;
 		residual = length(r) / flen;
 		i++;
 
@@ -736,24 +792,24 @@ pair<int, double> los2() {
 	return {i, residual};
 }
 
+//-----------------------------------------------------------------------------
 pair<int, double> los3() {
 	x.clear();
-	x.resize(n, 0); // x_0 = (0, 0, ...)
+	x.resize(n, 1);
 
 	r = x;
-	mul(a, r); // r = A*x_0
-	for (int i = 0; i < n; i++) // r = f - A*x_0
+	mul(a, r);
+	for (int i = 0; i < n; i++)
 		r[i] = f[i] - r[i];
-	mul_invert(a.d, r); // r = L^-1(f - A*x_0)
+	mul_invert(a.d, r);
 
 	z = r;
-	mul_invert(a.d, z); // z = U^-1 r
+	mul_invert(a.d, z);
 
 	p = z;
-	mul(a, p); // p = A z
-	mul_invert(a.d, p); // p = L^-1 A z
+	mul(a, p);
+	mul_invert(a.d, p);
 
-	//double residual = r*r;
 	double flen = sqrt(f*f);
 	double residual;
 
@@ -775,7 +831,6 @@ pair<int, double> los3() {
 			z[i] = t1[i] + beta * z[i];
 			p[i] = t2[i] + beta * p[i];
 		}
-		//residual -= alpha * alpha * pp;
 		residual = length(r) / flen;
 		i++;
 
@@ -789,154 +844,19 @@ pair<int, double> los3() {
 
 int n, maxiter;
 double eps;
-
 matrix a, lu;
-
 vector<double> f;
-
 vector<double> r, z, p;
-
 vector<double> x, t1, t2;
-
 bool is_log;
 
 };
 
-void test(SLAU& s, string dir) {
-	ofstream fout(dir + "/matrix.txt");
-	vector<double> f1 = s.f;
-	Matrix m, l, u, a, sub;
-	Vector pr(s.f.size()), pr1, f1_m(f1.size());
-	for (int i = 0; i < s.f.size(); i++) pr(i) = f1[i];
-	s.a.toDense(m);
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 
-	lu_decompose(s.a, s.lu);
-	matrix l_s = s.lu, u_s = s.lu;
-	l_s.u.clear(); l_s.u.resize(l_s.l.size(), 0);
-	u_s.l.clear(); u_s.l.resize(u_s.u.size(), 0);
-	l_s.toDense(l);
-	u_s.toDense(u);
-	mul(l, u, a);
-	a.negate();
-	sum(m, a, sub);
-
-	fout << "m:" << endl;
-	m.save(fout);
-	fout << endl;
-
-	fout << "l:" << endl;
-	l.save(fout);
-	fout << endl;
-
-	fout << "u:" << endl;
-	u.save(fout);
-	fout << endl;
-
-	fout << "sub:" << endl;
-	sub.save(fout);
-	fout << endl;
-
-	//mul(m, pr, pr1);
-	//mul(s.a, f1);
-
-	//transpose(m);
-	//mul(m, pr, pr1);
-	//mul_t(s.a, f1);
-
-	//mul(u, pr, pr1);
-	//mul_u(s.lu, f1);
-
-	/*pr(3) = 115;
-	mul(l, pr, pr1);
-	for (int i = 0; i < pr1.size(); i++) f1[i] = pr1(i);
-	pr1 = pr;
-	mul_l_invert(s.lu, f1);*/
-
-	/*pr(3) = 115;
-	transpose(u);
-	mul(u, pr, pr1);
-	for (int i = 0; i < pr1.size(); i++) f1[i] = pr1(i);
-	pr1 = pr;
-	mul_u_invert_t(s.lu, f1);*/
-
-	/*pr(3) = 115;
-	mul(u, pr, pr1);
-	for (int i = 0; i < pr1.size(); i++) f1[i] = pr1(i);
-	pr1 = pr;
-	mul_u_invert(s.lu, f1);*/
-
-	/*pr(3) = 115;
-	transpose(l);
-	mul(l, pr, pr1);
-	for (int i = 0; i < pr1.size(); i++) f1[i] = pr1(i);
-	pr1 = pr;
-	mul_l_invert_t(s.lu, f1);*/
-
-	/*pr1 = pr;
-	for (int i = 0; i < s.f.size(); i++) pr1(i) = s.f[i];
-	s.msg1();
-	f1 = s.x;*/
-
-	/*for (int i = 0; i < f1.size(); i++) f1_m(i) = f1[i];
-
-	for (int i = 0; i < sub.height(); i++) {
-		for (size_t j = 0; j < sub.width(); j++) {
-			if (fabs(sub(i, j)) < 0.000001)
-				sub(i, j) = 0;
-		}
-	}
-
-	fout << "pr1_m:" << endl;
-	pr1.save(fout);
-	fout << endl;
-
-	fout << "pr1:" << endl;
-	f1_m.save(fout);
-	fout << endl;*/
-
-	fout.close();
-}
-
-string print_time(double time) {
-	stringstream sout;
-	if (time > 1000 * 1000) {
-		sout << time / (1000 * 1000) << " s";
-	} else if (time > 1000) {
-		sout << time / (1000) << " ms";
-	} else {
-		sout << time << " mcs";
-	}
-	return sout.str();
-}
-
-void test_method(string name, function<pair<int, double>(SLAU*)> f, SLAU& s, bool is_write_each_iteration) {
-	cout << name << ":" << endl;
-
-	s.is_log = false;
-	int count = 100;
-	double time = 0;
-	pair<int, double> temp_res;
-	chrono::high_resolution_clock::time_point t1, t2;
-	for (int i = 0; i < count; i++) {
-		t1 = chrono::high_resolution_clock::now();
-		temp_res = f(&s);
-		t2 = chrono::high_resolution_clock::now();
-		time += chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
-		if (time / 1000.0 > 500.0) count = i+1;
-	}
-	time /= count;
-
-	if (is_write_each_iteration) {
-		s.is_log = true;
-		f(&s);
-	} else {
-		cout << "Iterations: " << temp_res.first << ", Residual: " << temp_res.second;
-	}
-
-	cout << "Time: " << print_time(time) << endl;
-	cout << "X: " << s.x << endl << endl;
-}
-
+//-----------------------------------------------------------------------------
 void make_gilbert(int size) {
 	Matrix g;
 	generateGilbertMatrix(size, g);
@@ -991,23 +911,193 @@ void make_gilbert(int size) {
 	fout.close();
 }
 
+//-----------------------------------------------------------------------------
+void test(SLAU& s, string dir) {
+	ofstream fout(dir + "/test.txt");
+	vector<double> f1;
+	Matrix m, l, u, a, sub;
+	Vector pr(s.f.size()), pr1, f1_m(f1.size());
+	pr = to(f1);
+	s.a.toDense(m);
+
+	lu_decompose(s.a, s.lu);
+	matrix l_s = s.lu, u_s = s.lu;
+	l_s.u.clear(); l_s.u.resize(l_s.l.size(), 0);
+	u_s.l.clear(); u_s.l.resize(u_s.u.size(), 0);
+	l_s.toDense(l);
+	u_s.toDense(u);
+	mul(l, u, a);
+	a.negate();
+	sum(m, a, sub);
+
+	for (int i = 0; i < sub.height(); i++) {
+		for (size_t j = 0; j < sub.width(); j++) {
+			if (fabs(sub(i, j)) < 0.000001)
+				sub(i, j) = 0;
+		}
+	}
+
+	fout << "a in dense:" << endl;
+	m.save(fout);
+	fout << endl;
+
+	fout << "l in dense:" << endl;
+	l.save(fout);
+	fout << endl;
+
+	fout << "u in dense:" << endl;
+	u.save(fout);
+	fout << endl;
+
+	fout << "a - l*u:" << endl;
+	sub.save(fout);
+	fout << endl;
+
+	pr = to(s.f);
+	f1 = s.f;
+	mul(m, pr, pr1);
+	mul(s.a, f1);
+	fout << "a * vec:" << endl;
+	fout << to(pr1) << endl;
+	fout << f1 << endl;
+	fout << endl;
+
+	pr = to(s.f);
+	f1 = s.f;
+	transpose(m);
+	mul(m, pr, pr1);
+	transpose(m);
+	mul_t(s.a, f1);
+	fout << "a^t * vec:" << endl;
+	fout << to(pr1) << endl;
+	fout << f1 << endl;
+	fout << endl;
+
+	pr = to(s.f);
+	f1 = s.f;
+	mul(u, pr, pr1);
+	mul_u(s.lu, f1);
+	fout << "u * vec:" << endl;
+	fout << to(pr1) << endl;
+	fout << f1 << endl;
+	fout << endl;
+
+	pr = to(s.f);
+	mul(l, pr, pr1);
+	f1 = to(pr1);
+	pr1 = pr;
+	mul_l_invert(s.lu, f1);
+	fout << "l^-1 * vec:" << endl;
+	fout << to(pr1) << endl;
+	fout << f1 << endl;
+	fout << endl;
+
+	pr = to(s.f);
+	transpose(u);
+	mul(u, pr, pr1);
+	transpose(u);
+	f1 = to(pr1);
+	pr1 = pr;
+	mul_u_invert_t(s.lu, f1);
+	fout << "u^-t * vec:" << endl;
+	fout << to(pr1) << endl;
+	fout << f1 << endl;
+	fout << endl;
+
+	pr = to(s.f);
+	mul(u, pr, pr1);
+	f1 = to(pr1);
+	pr1 = pr;
+	mul_u_invert(s.lu, f1);
+	fout << "u^-1 * vec:" << endl;
+	fout << to(pr1) << endl;
+	fout << f1 << endl;
+	fout << endl;
+
+	pr = to(s.f);
+	transpose(l);
+	mul(l, pr, pr1);
+	transpose(l);
+	f1 = to(pr1);
+	pr1 = pr;
+	mul_l_invert_t(s.lu, f1);
+	fout << "l^-t * vec:" << endl;
+	fout << to(pr1) << endl;
+	fout << f1 << endl;
+	fout << endl;
+
+	fout.close();
+}
+
+//-----------------------------------------------------------------------------
+string print_time(double time) {
+	stringstream sout;
+	if (time > 1000 * 1000) {
+		sout << time / (1000 * 1000) << " s";
+	} else if (time > 1000) {
+		sout << time / (1000) << " ms";
+	} else {
+		sout << time << " us";
+	}
+	return sout.str();
+}
+
+//-----------------------------------------------------------------------------
+void test_method(string name, function<pair<int, double>(SLAU*)> f, SLAU& s, bool is_write_each_iteration) {
+	cout << name << ":" << endl;
+
+	s.is_log = false;
+	int count = 100;
+	double time = 0;
+	pair<int, double> temp_res;
+	chrono::high_resolution_clock::time_point t1, t2;
+	for (int i = 0; i < count; i++) {
+		t1 = chrono::high_resolution_clock::now();
+		temp_res = f(&s);
+		t2 = chrono::high_resolution_clock::now();
+		time += chrono::duration_cast<chrono::microseconds>(t2 - t1).count();
+		if (time / 1000.0 > 1000.0) count = i+1;
+	}
+	time /= count;
+
+	if (is_write_each_iteration) {
+		s.is_log = true;
+		f(&s);
+	} else {
+		cout << "Iterations: " << temp_res.first << ", Residual: " << temp_res.second << endl;
+	}
+
+	cout << "Time: " << print_time(time) << endl;
+	cout << "X: " << s.x << endl << endl;
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
 int main() {
 	//for (int i = 0; i < 16; ++i) make_gilbert(i);
 
 	string dir = "test1"; 
 	bool is_write_to_file = true;
-	bool is_write_each_iteration = true;
+	bool is_write_each_iteration = false;
+	bool is_write_tests = false;
+
 	cout << "Enter dir: ";
 	cin >> dir;
 	cout << "Is write to file? (0 or 1): ";
 	cin >> is_write_to_file;
 	cout << "Is write each iteration? (0 or 1): ";
 	cin >> is_write_each_iteration;
+	cout << "Is write tests? (0 or 1): ";
+	cin >> is_write_tests;
 
 	if (is_write_to_file) freopen((dir + "/res.txt").c_str(), "w", stdout);
 
 	SLAU s;
 	s.read(dir);
+
+	if (is_write_tests) test(s, dir);
 
 	test_method("MSG", &SLAU::msg1, s, is_write_each_iteration);
 	test_method("MSG LUsq", &SLAU::msg2, s, is_write_each_iteration);
