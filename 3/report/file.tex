@@ -1,0 +1,193 @@
+\mytitlepage{прикладной математики}{3}{Численные методы}{Решение разреженных СЛАУ трехшаговыми итерационными методами с предобусловливанием}{ПМ-63}{Шепрут И.И.}{11}{Задорожный А.Г.}{2018}
+
+\section{Цель работы}
+
+Изучить особенности реализации трехшаговых итерационных методов для СЛАУ с разреженными матрицами. Исследовать влияние предобусловливания на сходимость изучаемых методов на нескольких матрицах большой (не менее 10000) размерности.
+
+\textbf{Вариант 11:} Сравнить МСГ и ЛОС для несимметричной матрицы. Факторизация LU(sq).
+
+\section{Исследования}
+
+\subsection{Матрица с диагональным преобладанием}
+$$ A=\left(\quad\begin{matrix}
+\cellcolor{green!30}2 & \cellcolor{green!30}0 & 0 & 0 & \cellcolor{green!30}0 & 0 & \cellcolor{green!30}-1 & 0 & 0 & 0 \\
+\cellcolor{green!30}-3 & \cellcolor{green!30}13 & \cellcolor{green!30}-4 & 0 & 0 & \cellcolor{green!30}-4 & 0 & \cellcolor{green!30}-2 & 0 & 0 \\
+0 & \cellcolor{green!30}0 & \cellcolor{green!30}7 & \cellcolor{green!30}-3 & 0 & 0 & \cellcolor{green!30}-2 & 0 & \cellcolor{green!30}-2 & 0 \\
+0 & 0 & \cellcolor{green!30}-3 & \cellcolor{green!30}8 & \cellcolor{green!30}-2 & 0 & 0 & \cellcolor{green!30}0 & 0 & \cellcolor{green!30}-3 \\
+\cellcolor{green!30}-2 & 0 & 0 & \cellcolor{green!30}-2 & \cellcolor{green!30}5 & \cellcolor{green!30}-1 & 0 & 0 & \cellcolor{green!30}0 & 0 \\
+0 & \cellcolor{green!30}-1 & 0 & 0 & \cellcolor{green!30}-1 & \cellcolor{green!30}2 & \cellcolor{green!30}0 & 0 & 0 & \cellcolor{green!30}0 \\
+\cellcolor{green!30}-2 & 0 & \cellcolor{green!30}-4 & 0 & 0 & \cellcolor{green!30}0 & \cellcolor{green!30}6 & \cellcolor{green!30}0 & 0 & 0 \\
+0 & \cellcolor{green!30}0 & 0 & \cellcolor{green!30}-3 & 0 & 0 & \cellcolor{green!30}-3 & \cellcolor{green!30}7 & \cellcolor{green!30}-1 & 0 \\
+0 & 0 & \cellcolor{green!30}-2 & 0 & \cellcolor{green!30}-4 & 0 & 0 & \cellcolor{green!30}-3 & \cellcolor{green!30}9 & \cellcolor{green!30}0 \\
+0 & 0 & 0 & \cellcolor{green!30}-1 & 0 & \cellcolor{green!30}-4 & 0 & 0 & \cellcolor{green!30}-4 & \cellcolor{green!30}9 
+\end{matrix}\quad\right), X=\begin{pmatrix}1 \\
+2 \\
+3 \\
+4 \\
+5 \\
+6 \\
+7 \\
+8 \\
+9 \\
+10 
+\end{pmatrix}, F=\begin{pmatrix}-5 \\
+-29 \\
+-23 \\
+-17 \\
+9 \\
+5 \\
+28 \\
+14 \\
+31 \\
+26 
+\end{pmatrix} $$
+
+$$ \varepsilon = 10^{-14}, \quad iterations_{max} = 10000, \quad start = \begin{pmatrix} 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \end{pmatrix}^T $$
+
+\setlength{\tabcolsep}{2pt}
+\tabulinesep=0.3mm
+\noindent\begin{tabu}{|X[-1,l]|X[-1,l]|X[-1,l]|X[-1,l]|}
+\hline
+Метод & Итераций & Относительная невязка & Время \\ \hline
+Якоби & $513$ & $9.3\cdot 10^{-15}$ & ? \\ \hline
+Гаусс-Зейдель & $85$ & $9.1 \cdot 10^{-15}$ & ? \\ \hline
+\rowcolor{green!30}
+МСГ LU(sq) & $10$ & $4.3 \cdot 10^{-16}$ & $11.26$ мкс \\ \hline
+\rowcolor{orange!30}
+ЛОС & $10001$ & $2.2 \cdot 10^{-2}$ & $3.55$ мс \\ \hline
+ЛОС LU(sq) & $36$ & $2.8 \cdot 10^{-15}$ & $32.7$ мкс \\ \hline
+\rowcolor{orange!30}
+ЛОС Диаг. & $10001$ & $9.8 \cdot 10^{-3}$ & $3.95$ мс \\ \hline 
+\end{tabu}
+
+\subsection{Матрица с обратным знаком внедиагональных элементов}
+
+$$ B=\left(\quad\begin{matrix}
+\cellcolor{green!30}2 & \cellcolor{green!30}0 & 0 & 0 & \cellcolor{green!30}0 & 0 & \cellcolor{green!30}1 & 0 & 0 & 0 \\
+\cellcolor{green!30}3 & \cellcolor{green!30}13 & \cellcolor{green!30}4 & 0 & 0 & \cellcolor{green!30}4 & 0 & \cellcolor{green!30}2 & 0 & 0 \\
+0 & \cellcolor{green!30}0 & \cellcolor{green!30}7 & \cellcolor{green!30}3 & 0 & 0 & \cellcolor{green!30}2 & 0 & \cellcolor{green!30}2 & 0 \\
+0 & 0 & \cellcolor{green!30}3 & \cellcolor{green!30}8 & \cellcolor{green!30}2 & 0 & 0 & \cellcolor{green!30}0 & 0 & \cellcolor{green!30}3 \\
+\cellcolor{green!30}2 & 0 & 0 & \cellcolor{green!30}2 & \cellcolor{green!30}5 & \cellcolor{green!30}1 & 0 & 0 & \cellcolor{green!30}0 & 0 \\
+0 & \cellcolor{green!30}1 & 0 & 0 & \cellcolor{green!30}1 & \cellcolor{green!30}2 & \cellcolor{green!30}0 & 0 & 0 & \cellcolor{green!30}0 \\
+\cellcolor{green!30}2 & 0 & \cellcolor{green!30}4 & 0 & 0 & \cellcolor{green!30}0 & \cellcolor{green!30}6 & \cellcolor{green!30}0 & 0 & 0 \\
+0 & \cellcolor{green!30}0 & 0 & \cellcolor{green!30}3 & 0 & 0 & \cellcolor{green!30}3 & \cellcolor{green!30}7 & \cellcolor{green!30}1 & 0 \\
+0 & 0 & \cellcolor{green!30}2 & 0 & \cellcolor{green!30}4 & 0 & 0 & \cellcolor{green!30}3 & \cellcolor{green!30}9 & \cellcolor{green!30}0 \\
+0 & 0 & 0 & \cellcolor{green!30}1 & 0 & \cellcolor{green!30}4 & 0 & 0 & \cellcolor{green!30}4 & \cellcolor{green!30}9 
+\end{matrix}\quad\right), X=\begin{pmatrix}1 \\
+2 \\
+3 \\
+4 \\
+5 \\
+6 \\
+7 \\
+8 \\
+9 \\
+10 
+\end{pmatrix}, F=\begin{pmatrix}9 \\
+81 \\
+65 \\
+81 \\
+41 \\
+19 \\
+56 \\
+98 \\
+131 \\
+154 
+\end{pmatrix} $$
+
+$$ \varepsilon = 10^{-14}, \quad iterations_{max} = 10000, \quad start = \begin{pmatrix} 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \end{pmatrix}^T $$
+
+\setlength{\tabcolsep}{2pt}
+\tabulinesep=0.3mm
+\noindent\begin{tabu}{|X[-1,l]|X[-1,l]|X[-1,l]|X[-1,l]|}
+\hline
+Метод & Итераций & Относительная невязка & Время \\ \hline
+Якоби & $132$ & $7.7\cdot 10^{-15}$ & ? \\ \hline
+Гаусс-Зейдель & $57$ & $9.9 \cdot 10^{-15}$ & ? \\ \hline
+МСГ LU(sq) & $10$ & $2.5 \cdot 10^{-19}$ & $18.66$ мкс \\ \hline
+ЛОС & $119$ & $9.5 \cdot 10^{-15}$ & $38.26$ мкс \\ \hline
+\rowcolor{green!30}
+ЛОС LU(sq) & $26$ & $7.8 \cdot 10^{-15}$ & $16.22$ мкс \\ \hline
+ЛОС Диаг. & $88$ & $6.6 \cdot 10^{-15}$ & $33.56$ мкс \\ \hline
+\end{tabu}
+
+\subsection{Большой тест 0945}
+
+\setlength{\tabcolsep}{2pt}
+\tabulinesep=0.3mm
+\noindent\begin{tabu}{|X[-1,l]|X[-1,l]|X[-1,l]|X[-1,l]|}
+\hline
+Метод & Итераций & Относительная невязка & Время \\ \hline
+МСГ & $393$ & $9.7\cdot 10^{-21}$ & $17.06$ мс \\ \hline
+МСГ LU(sq) & $11$ & $5.4 \cdot 10^{-21}$ & $2.35$ мс \\ \hline
+МСГ Диаг. & $50$ & $5.5 \cdot 10^{-21}$ & $2.41$ мс \\ \hline
+ЛОС & $486$ & $9 \cdot 10^{-21}$ & $21.64$ мс \\ \hline
+\rowcolor{green!30}
+ЛОС LU(sq) & $9$ & $2.5 \cdot 10^{-21}$ & $1.36$ мс \\ \hline
+ЛОС Диаг. & $357$ & $9.4 \cdot 10^{-21}$ & $17.81$ мс \\ \hline
+\end{tabu}
+
+\subsection{Большой тест 4545}
+
+\setlength{\tabcolsep}{2pt}
+\tabulinesep=0.3mm
+\noindent\begin{tabu}{|X[-1,l]|X[-1,l]|X[-1,l]|X[-1,l]|}
+\hline
+Метод & Итераций & Относительная невязка & Время \\ \hline
+МСГ & $2006$ & $9.2\cdot 10^{-21}$ & $417.82$ мс \\ \hline
+МСГ LU(sq) & $11$ & $5.7 \cdot 10^{-21}$ & $11.67$ мс \\ \hline
+МСГ Диаг. & $157$ & $9.8 \cdot 10^{-21}$ & $36.55$ мс \\ \hline
+ЛОС & $2119$ & $9.7 \cdot 10^{-21}$ & $469.41$ мс \\ \hline
+\rowcolor{green!30}
+ЛОС LU(sq) & $9$ & $1.8 \cdot 10^{-21}$ & $6.79$ мс \\ \hline
+ЛОС Диаг. & $1701$ & $9.7 \cdot 10^{-21}$ & $425.378$ мс \\ \hline
+\end{tabu}
+
+\subsection{Матрицы Гильберта}
+
+\subsubsection{Размерность 5}
+
+\setlength{\tabcolsep}{2pt}
+\tabulinesep=0.3mm
+\noindent\begin{tabu}{|X[-1,l]|X[-1,l]|X[-1,l]|X[-1,l]|}
+\hline
+Метод & Итераций & Относительная невязка & Время \\ \hline
+МСГ & $7$ & $4.6 \cdot 10^{-14}$ & $2.81$ мкс \\ \hline
+\rowcolor{green!30}
+МСГ LU(sq) & $1$ & $2.5 \cdot 10^{-14}$ & $2.3$ мкс \\ \hline
+МСГ Диаг. & $7$ & $5.4 \cdot 10^{-15}$ & $3.32$ мкс \\ \hline
+ЛОС & $7$ & $7.2 \cdot 10^{-14}$ & $10.72$ мкс \\ \hline
+ЛОС LU(sq) & $1$ & $3.7 \cdot 10^{-14}$ & $4.24$ мкс \\ \hline
+ЛОС Диаг. & $7$ & $1.2 \cdot 10^{-14}$ & $10.83$ мкс \\ \hline
+\end{tabu}
+
+\subsubsection{Размерность 10}
+
+\setlength{\tabcolsep}{2pt}
+\tabulinesep=0.3mm
+\noindent\begin{tabu}{|X[-1,l]|X[-1,l]|X[-1,l]|X[-1,l]|}
+\hline
+Метод & Итераций & Относительная невязка & Время \\ \hline
+МСГ & $18$ & $1.6 \cdot 10^{-15}$ & $6.75$ мкс \\ \hline
+МСГ LU(sq) & $2$ & $1.0 \cdot 10^{-15}$ & $4.25$ мкс \\ \hline
+МСГ Диаг. & $17$ & $1.9 \cdot 10^{-16}$ & $7.49$ мкс \\ \hline
+ЛОС & $17$ & $7.9 \cdot 10^{-15}$ & $6.61$ мкс \\ \hline
+\rowcolor{green!30}
+ЛОС LU(sq) & $2$ & $1.3 \cdot 10^{-15}$ & $3.25$ мкс \\ \hline
+ЛОС Диаг. & $16$ & $8.8 \cdot 10^{-15}$ & $7.1$ мкс \\ \hline
+\end{tabu}
+
+\section{Выводы}
+
+\noindent\begin{easylist}
+\ListProperties(Hang1=true, Margin2=12pt, Style1**=$\bullet$ , Hide2=1, Hide1=1)
+& По таблицам видно, что использование предобусловливания, даже диагонального, положительно влияет на скорость сходимости. 
+& В среднем самый быстрый метод - ЛОС LU(sq). 
+& Диагональное предобуславливание увеличивает скорость сходимости для МСГ больше, чем для ЛОС.
+\end{easylist}
+
+\section{Код программы}
+
+\begin{multicols*}{2}
+\mycodeinput{c++}{../program.cpp}{program.cpp}
+\end{multicols*}

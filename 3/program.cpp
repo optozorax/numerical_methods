@@ -558,7 +558,7 @@ void read(string dir) {
 //-----------------------------------------------------------------------------
 pair<int, double> msg1() {
 	x.clear();
-	x.resize(n, 1);
+	x.resize(n, 0);
 
 	r = x;
 	mul(a, r);
@@ -600,7 +600,7 @@ pair<int, double> msg2() {
 	lu_decompose(a, lu);
 
 	x.clear();
-	x.resize(n, 1);
+	x.resize(n, 0);
 
 	r = x;
 	mul(a, r);
@@ -653,7 +653,7 @@ pair<int, double> msg2() {
 //-----------------------------------------------------------------------------
 pair<int, double> msg3() {
 	x.clear();
-	x.resize(n, 1);
+	x.resize(n, 0);
 
 	r = x;
 	mul(a, r);
@@ -700,7 +700,7 @@ pair<int, double> msg3() {
 //-----------------------------------------------------------------------------
 pair<int, double> los1() {
 	x.clear();
-	x.resize(n, 1);
+	x.resize(n, 0);
 
 	r = x;
 	mul(a, r);
@@ -745,7 +745,7 @@ pair<int, double> los1() {
 pair<int, double> los2() {
 	lu_decompose(a, lu);
 	x.clear();
-	x.resize(n, 1);
+	x.resize(n, 0);
 
 	r = x;
 	mul(a, r);
@@ -795,7 +795,7 @@ pair<int, double> los2() {
 //-----------------------------------------------------------------------------
 pair<int, double> los3() {
 	x.clear();
-	x.resize(n, 1);
+	x.resize(n, 0);
 
 	r = x;
 	mul(a, r);
