@@ -361,12 +361,12 @@ void mul_u(const matrix& u, vector<double>& x_y) {
 
 void mul(const vector<double>& d, vector<double>& x_y) {
 	for (int i = 0; i < d.size(); i++)
-		x_y[i] /= d[i];
+		x_y[i] *= d[i];
 }
 
 void mul_invert(const vector<double>& d, vector<double>& x_y) {
 	for (int i = 0; i < d.size(); i++)
-		x_y[i] *= d[i];
+		x_y[i] /= d[i];
 }
 
 double length(const vector<double>& mas) {
@@ -425,9 +425,40 @@ void read(string dir) {
 }
 
 void msg1() {
-	/*
-	как?
-	*/
+	x.resize(n, 0); // x_0 = (0, 0, ...)
+
+	r = x;
+	mul(a, r); // r = A*x_0
+	for (int i = 0; i < n; ++i)
+		r[i] = f[i]-r[i];
+
+	z = r;
+	double rr = r*r;
+	double flen = sqrt(f*f);
+
+	int i = 0;
+	while (true) {
+		t1 = z;
+		mul(a, t1);
+		double alpha = (rr) / (t1*z);
+		for (int i = 0; i < n; ++i) {
+			x[i] += alpha * z[i];
+			r[i] -= alpha * t1[i];
+		}
+		double rr2 = r*r;
+		double beta = rr2/rr;
+		rr = rr2;
+		for (int i = 0; i < n; ++i)
+			z[i] = r[i] + beta * z[i];
+		double residual = sqrt(rr) / flen;
+		i++;
+
+		cout << "Iter: " << setw(4) << i << "\tResidual: " << residual << endl;
+		if (fabs(residual) < eps || i > maxiter)
+			break;
+	}
+
+	mul_u_invert(lu, x);
 }
 
 void msg2() {
@@ -448,7 +479,7 @@ void msg2() {
 
 	z = r;
 	double rr = r*r;
-	double ff = f*f;
+	double flen = sqrt(f*f);
 
 	int i = 0;
 	while (true) {
@@ -458,7 +489,7 @@ void msg2() {
 		mul_l_invert(lu, t1);
 		mul_l_invert_t(lu, t1);
 		mul_t(a, t1);
-		mul_u_invert(lu, t1);
+		mul_u_invert_t(lu, t1);
 		double alpha = (rr) / (t1*z);
 		for (int i = 0; i < n; ++i) {
 			x[i] += alpha * z[i];
@@ -469,10 +500,10 @@ void msg2() {
 		rr = rr2;
 		for (int i = 0; i < n; ++i)
 			z[i] = r[i] + beta * z[i];
-		double residual = length(r) / length(f);
+		double residual = sqrt(rr) / flen;
 		i++;
 
-		cout << "Iter: " << i << "\tResidual: " << residual << endl;
+		cout << "Iter: " << setw(4) << i << "\tResidual: " << residual << endl;
 		if (fabs(residual) < eps || i > maxiter)
 			break;
 	}
@@ -481,55 +512,49 @@ void msg2() {
 }
 
 void msg3() {
-	lu_decompose(a, lu);
-
 	x.resize(n, 0); // x_0 = (0, 0, ...)
 
 	r = x;
 	mul(a, r); // r = A*x_0
 	for (int i = 0; i < n; ++i)
 		r[i] = f[i]-r[i];
-	mul(a.d, r);
-	mul(a.d, r);
-	mul_t(a, r);
-	mul(a.d, r);
 
-	mul_invert(a.d, x);
+	mul(a.d, x);
 
 	z = r;
-	double rr = r*r;
-	double ff = f*f;
+	mul_invert(a.d, z);
+
+	double rr;
+	t1 = r;
+	mul_invert(a.d, t1);
+	rr = t1*r;
+	double flen = sqrt(f*f);
 
 	int i = 0;
 	while (true) {
 		t1 = z;
-		mul(a.d, r);
 		mul(a, t1);
-		mul(a.d, r);
-		mul(a.d, r);
-		mul_t(a, t1);
-		mul(a.d, r);
 		double alpha = (rr) / (t1*z);
 		for (int i = 0; i < n; ++i) {
 			x[i] += alpha * z[i];
 			r[i] -= alpha * t1[i];
 		}
-		double rr2 = r*r;
+		t1 = r;
+		mul_invert(a.d, t1);
+		double rr2 = t1*r;
 		double beta = rr2/rr;
 		rr = rr2;
 		for (int i = 0; i < n; ++i)
-			z[i] = r[i] + beta * z[i];
-		double residual = rr/ff;
+			z[i] = t1[i] + beta * z[i];
+		double residual = length(r) / flen;
 		i++;
 
-		residual = length(r) / length(f);
-
-		cout << "Iter: " << i << "\tResidual: " << residual << endl;
+		cout << "Iter: " << setw(4) << i << "\tResidual: " << residual << endl;
 		if (fabs(residual) < eps || i > maxiter)
 			break;
 	}
 
-	mul_u_invert(lu, x);
+	mul_invert(a.d, x);
 }
 
 void los1() {
@@ -565,9 +590,7 @@ void los1() {
 		residual -= alpha * alpha * pp;
 		i++;
 
-		residual = length(r) / length(f);
-
-		cout << "Iter: " << i << "\tResidual: " << residual << endl;
+		cout << "Iter: " << setw(4) << i << "\tResidual: " << residual << endl;
 		if (fabs(residual) < eps || i > maxiter)
 			break;
 	}
@@ -613,8 +636,6 @@ void los2() {
 		residual -= alpha * alpha * pp;
 		i++;
 
-		residual = length(r) / length(f);
-
 		cout << "Iter: " << setw(4) << i << "\tResidual: " << residual << endl;
 		if (fabs(residual) < eps || i > maxiter)
 			break;
@@ -628,14 +649,14 @@ void los3() {
 	mul(a, r); // r = A*x_0
 	for (int i = 0; i < n; i++) // r = f - A*x_0
 		r[i] = f[i] - r[i];
-	mul(a.d, r); // r = L^-1(f - A*x_0)
+	mul_invert(a.d, r); // r = L^-1(f - A*x_0)
 
 	z = r;
-	mul(a.d, z); // z = U^-1 r
+	mul_invert(a.d, z); // z = U^-1 r
 
 	p = z;
 	mul(a, p); // p = A z
-	mul(a.d, p); // p = L^-1 A z
+	mul_invert(a.d, p); // p = L^-1 A z
 
 	double residual = r*r;
 
@@ -648,10 +669,10 @@ void los3() {
 			r[i] -= alpha * p[i];
 		}
 		t1 = r;
-		mul(a.d, t1);
+		mul_invert(a.d, t1);
 		t2 = t1;
 		mul(a, t2);
-		mul(a.d, t2);
+		mul_invert(a.d, t2);
 		double beta = -(p*t2) / pp;
 		for (int i = 0; i < n; ++i) {
 			z[i] = t1[i] + beta * z[i];
@@ -660,9 +681,7 @@ void los3() {
 		residual -= alpha * alpha * pp;
 		i++;
 
-		residual = length(r) / length(f);
-
-		cout << "Iter: " << i << "\tResidual: " << residual << endl;
+		cout << "Iter: " << setw(4) << i << "\tResidual: " << residual << endl;
 		if (fabs(residual) < eps || i > maxiter)
 			break;
 	}
