@@ -10,10 +10,7 @@ double length(const xn_t& x) {
 
 //-----------------------------------------------------------------------------
 double calc_partial_derivative_numeric(const fn1_t& f, const xn_t& x, int i) {
-	#ifdef _DEBUG
-	if (i <= x.size())
-		throw exception();
-	#endif
+	assert(i < x.size());
 
 	double step = x[i]*1e-9;
 
