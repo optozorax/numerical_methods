@@ -1,14 +1,29 @@
 #pragma once
 
-#include "main.h"
+#include <cassert>
+
+#include "logic.h"
 
 //-----------------------------------------------------------------------------
-struct point { double x, y; };
-struct circle { point c; double r; };
-struct line { point a, b; };
+struct point 
+{ 
+	point(double x, double y) : x(x), y(y) {} 
+	point(const xn_t& x) : x(x[0]), y(x[1]) {
+		assert(x.size() == 2);
+	}
+	double x, y; 
+};
 
-point to(const xn_t& x);
-circle to(const xn_t& x);
+struct circle {
+	circle(double x, double y, double r) : c(x, y), r(r) {}
+	circle(point c, double r) : c(c), r(r) {}
+	circle(const xn_t& x) : c(x[0], x[1]), r(x[2]) {
+		assert(x.size() == 3);
+	}
+	point c; double r;
+};
+
+struct line { point a, b; };
 
 //-----------------------------------------------------------------------------
 pair<fnm_t, jnm_t> two_circles(circle a, circle b);
@@ -22,13 +37,9 @@ pair<fnm_t, jnm_t> three_circles(
 	bool a_in, bool b_in, bool c_in
 );
 
-// pair<fnm_t, jnm_t> three_circles_2(
-// 	circle a, circle b, circle c, 
-// 	bool a_in, bool b_in, bool c_in
-// );
-
 //-----------------------------------------------------------------------------
 inline double sqr(double a) {return a*a;}
+inline double sign(double a) { if (a == 0) return 0; else return (a<0)?-1:1; }
 
 double dist(const point& a, const point& b);
 
