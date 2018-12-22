@@ -26,13 +26,13 @@ struct circle {
 struct line { point a, b; };
 
 //-----------------------------------------------------------------------------
-pair<fnm_t, jnm_t> two_circles(circle a, circle b);
-pair<fnm_t, jnm_t> two_circles_and_line(circle a, circle b, line l);
-pair<fnm_t, jnm_t> three_lines(line a, line b, line c);
+pair<sle_f, fnm_f> two_circles(circle a, circle b);
+pair<sle_f, fnm_f> two_circles_and_line(circle a, circle b, line l);
+pair<sle_f, fnm_f> three_lines(line a, line b, line c);
 
-pair<fnm_t, jnm_t> sin_and_line(point b); // a is {0, 0}
+pair<sle_f, fnm_f> sin_and_line(point b); // a is {0, 0}
 
-pair<fnm_t, jnm_t> three_circles(
+pair<sle_f, fnm_f> three_circles(
 	circle a, circle b, circle c,
 	bool a_in, bool b_in, bool c_in
 );
