@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cassert>
-
 #include "logic.h"
 
 //-----------------------------------------------------------------------------
@@ -9,7 +7,7 @@ struct point
 { 
 	point(double x, double y) : x(x), y(y) {} 
 	point(const xn_t& x) : x(x[0]), y(x[1]) {
-		assert(x.size() == 2);
+		myassert(x.size() == 2);
 	}
 	double x, y; 
 };
@@ -18,7 +16,7 @@ struct circle {
 	circle(double x, double y, double r) : c(x, y), r(r) {}
 	circle(point c, double r) : c(c), r(r) {}
 	circle(const xn_t& x) : c(x[0], x[1]), r(x[2]) {
-		assert(x.size() == 3);
+		myassert(x.size() == 3);
 	}
 	point c; double r;
 };
@@ -26,6 +24,7 @@ struct circle {
 struct line { point a, b; };
 
 //-----------------------------------------------------------------------------
+pair<sle_f, fnm_f> one_circle(circle a);
 pair<sle_f, fnm_f> two_circles(circle a, circle b);
 pair<sle_f, fnm_f> two_circles_and_line(circle a, circle b, line l);
 pair<sle_f, fnm_f> three_lines(line a, line b, line c);

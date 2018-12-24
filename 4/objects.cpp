@@ -1,10 +1,27 @@
-#include <cassert>
-
 #include "objects.h"
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
+pair<sle_f, fnm_f> one_circle(circle a) {
+	//-------------------------------------------------------------------------
+	fn_f f1 = [a] (const xn_t& x) -> double { return circle_f(a, x); };
+
+	fnm_f f = {f1};
+
+	//-------------------------------------------------------------------------
+	jnm_f j = [a] (const xn_t& x) -> matrix_t {
+		matrix_t result(1, xn_t(2));
+		result[0][0] = circle_d_x(a, x);
+		result[0][1] = circle_d_y(a, x);
+
+		return result;
+	};
+
+	return {get_sle_function(j, f), f};
+}
 
 //-----------------------------------------------------------------------------
 pair<sle_f, fnm_f> two_circles(circle a, circle b) {
@@ -89,7 +106,7 @@ pair<sle_f, fnm_f> sin_and_line(point b) {
 	line l = {point(0, 0), b};
 	fn_f f1 = [l] (const xn_t& x) -> double {return line_f(l, x); };
 	fn_f f2 = [] (const xn_t& x) -> double {
-		assert(x.size() == 2);
+		myassert(x.size() == 2);
 		return x[1]-sin(x[0]);
 	};
 
@@ -97,7 +114,7 @@ pair<sle_f, fnm_f> sin_and_line(point b) {
 
 	//-------------------------------------------------------------------------
 	jnm_f j = [l] (const xn_t& x) -> matrix_t {
-		assert(x.size() == 2);
+		myassert(x.size() == 2);
 		matrix_t result(2, xn_t(2));
 		result[0][0] = line_d_x(l, x);
 		result[0][1] = line_d_y(l, x);
@@ -162,7 +179,7 @@ double line_f(const line& l, const point& x) {
 	bool first_zero = fabs(l.b.x-l.a.x)/length < relative;
 	bool second_zero = fabs(l.b.y-l.a.y)/length < relative;
 
-	assert(!(first_zero && second_zero));
+	myassert(!(first_zero && second_zero));
 
 	if (first_zero) 
 		return x.x-l.a.x;
@@ -181,7 +198,7 @@ double line_d_x(const line& l, const point& x) {
 	bool first_zero = fabs(l.b.x-l.a.x)/length < relative;
 	bool second_zero = fabs(l.b.y-l.a.y)/length < relative;
 
-	assert(!(first_zero && second_zero));
+	myassert(!(first_zero && second_zero));
 
 	if (first_zero) 
 		return 1;
@@ -200,7 +217,7 @@ double line_d_y(const line& l, const point& x) {
 	bool first_zero = fabs(l.b.x-l.a.x)/length < relative;
 	bool second_zero = fabs(l.b.y-l.a.y)/length < relative;
 
-	assert(!(first_zero && second_zero));
+	myassert(!(first_zero && second_zero));
 
 	if (first_zero) 
 		return 0;
@@ -208,7 +225,7 @@ double line_d_y(const line& l, const point& x) {
 	if (second_zero) 
 		return 1;
 	else 
-		return 1.0/(l.b.y-l.a.y);
+		return -1.0/(l.b.y-l.a.y);
 }
 
 //-----------------------------------------------------------------------------

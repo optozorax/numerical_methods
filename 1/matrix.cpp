@@ -324,14 +324,15 @@ bool sum(const Matrix& a, const Matrix& b, Matrix& result) {
 //-----------------------------------------------------------------------------
 bool transpose(Matrix& a) {
 	// rus_a = rus_a^T
-	if (a.height() != a.width())
-		return false;
+	Matrix a_t(a.height(), a.width());
 
 	for (int i = 0; i < a.height(); ++i) {
-		for (int j = 0; j < i; ++j) {
-			std::swap(a(j, i), a(i, j));
+		for (int j = 0; j < a.width(); ++j) {
+			a_t(j, i) = a(i, j);
 		}
 	}
+
+	a = a_t;
 
 	return true;
 }

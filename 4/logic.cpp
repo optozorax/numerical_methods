@@ -1,10 +1,47 @@
 #include <iostream>
 #include <iomanip>
-#include <cassert>
 #include <algorithm>
 
 #include "../1/matrix.h"
 #include "logic.h"
+
+//-----------------------------------------------------------------------------
+Matrix to(const matrix_t& a) {
+	Matrix result(a[0].size(), a.size());
+	for (int i = 0; i < a.size(); ++i) {
+		for (int j = 0; j < a[i].size(); ++j)
+			result(i, j) = a[i][j];
+	}
+	return result;
+}
+
+//-----------------------------------------------------------------------------
+Matrix to(const xn_t& a) {
+	Matrix result(1, a.size());
+	for (int i = 0; i < a.size(); ++i) {
+		result(i, 0) = a[i];
+	}
+	return result;
+}
+
+//-----------------------------------------------------------------------------
+matrix_t to_matrix(const Matrix& a) {
+	matrix_t result(a.height(), vector<double>(a.width()));
+	for (int i = 0; i < a.height(); ++i) {
+		for (int j = 0; j < a.width(); ++j) {
+			result[i][j] = a(i, j);
+		}
+	}
+	return result;
+}
+
+//-----------------------------------------------------------------------------
+xn_t to_vec(const Matrix& a) {
+	xn_t result(a.height());
+	for (int i = 0; i < a.height(); ++i)
+		result[i] = a(i, 0);
+	return result;
+}
 
 //-----------------------------------------------------------------------------
 double length(const xn_t& x) {
@@ -16,22 +53,32 @@ double length(const xn_t& x) {
 
 //-----------------------------------------------------------------------------
 void solve_gauss(const matrix_t& a, const xn_t& b, xn_t& dx) {
-	Matrix a_m(a[0].size(), a.size()), b_m(1, b.size()), dx_m(1, b.size());
-	for (int i = 0; i < a.size(); ++i) {
-		for (int j = 0; j < a[i].size(); ++j)
-			a_m(i, j) = a[i][j];
-		b_m(i, 0) = b[i];
-	}
-	solveSLAE_byGaussMethod(a_m, b_m, dx_m);
-	dx.clear();
-	dx.resize(dx_m.height());
-	for (int i = 0; i < dx_m.height(); ++i)
-		dx[i] = dx_m(i, 0);
+	Matrix dx_m;
+	solveSLAE_byGaussMethod(to(a), to(b), dx_m);
+	dx = to_vec(dx_m);
+}
+
+//-----------------------------------------------------------------------------
+void mul_t(const matrix_t& a, const matrix_t& b, matrix_t& result) {
+	Matrix result_m;
+	Matrix a_m = to(a);
+	transpose(a_m);
+	mul(a_m, to(b), result_m);
+	result = to_matrix(result_m);
+}
+
+//-----------------------------------------------------------------------------
+void mul_t(const matrix_t& a, const xn_t& b, xn_t& result) {
+	Matrix result_m;
+	Matrix a_m = to(a);
+	transpose(a_m);
+	mul(a_m, to(b), result_m);
+	result = to_vec(result_m);
 }
 
 //-----------------------------------------------------------------------------
 xn_t operator+(const xn_t& a, const xn_t& b) {
-	assert(a.size() == b.size());
+	myassert(a.size() == b.size());
 	xn_t result(a.size());
 	for (int i = 0; i < a.size(); ++i)
 		result[i] = a[i] + b[i];
@@ -62,7 +109,7 @@ ostream& operator<<(ostream& out, const xn_t& v) {
 
 //-----------------------------------------------------------------------------
 double calc_partial_derivative_numeric(const fn_f& f, const xn_t& x_in, int i) {
-	assert(i < x_in.size());
+	myassert(i < x_in.size());
 
 	double step = 1e-9;
 	if (x_in[i] != 0)
@@ -73,8 +120,9 @@ double calc_partial_derivative_numeric(const fn_f& f, const xn_t& x_in, int i) {
 	x[i] = x[i] +   step; double x1 = f(x); x[i] = x[i] -   step;
 	x[i] = x[i] -   step; double x2 = f(x); x[i] = x[i] +   step;
 	x[i] = x[i] + 2*step; double x3 = f(x); x[i] = x[i] - 2*step;
+	x[i] = x[i] - 2*step; double x4 = f(x); x[i] = x[i] + 2*step;
 
-	double result = (-2*x2-3*x0+6*x1-x3)/(6.0*step);
+	double result = (-x3 + 8*x1 - 8*x2 + x4)/(12.0*step);
 	//double result = (x1 - x0) / step;
 	return result;
 }
@@ -112,6 +160,15 @@ sle_f get_sle_function(const jnm_f& j, const fnm_f& f) {
 	};
 }
 
+sle_f square_cast_none(const sle_f& s) {
+	return [s] (const xn_t& x) -> sle_t {
+		auto res = s(x);
+		myassert(res.first[0].size() == res.first.size());
+		myassert(res.first.size() == res.second.size());
+		return res;
+	};
+}
+
 //-----------------------------------------------------------------------------
 sle_f square_cast_1(const sle_f& s) {
 	return [s] (const xn_t& x) -> sle_t {
@@ -120,7 +177,9 @@ sle_f square_cast_1(const sle_f& s) {
 		auto& A = res.first;
 		auto& b = res.second;
 
-		int count = x.size() - A[0].size();
+		myassert(A[0].size() > A.size());
+
+		int count = x.size() - A.size();
 
 		// Находим номера элементов, для которых dF_i(x)/dx_j минимально при всех i
 		vector<pair<double, int>> b_sorted;
@@ -132,7 +191,7 @@ sle_f square_cast_1(const sle_f& s) {
 		}
 
 		sort(b_sorted.begin(), b_sorted.end(), [] (auto a, auto b) -> bool {
-			return a.first < b.second;
+			return a.first < b.first;
 		});
 
 		vector<int> mins;
@@ -167,6 +226,8 @@ sle_f square_cast_2(const sle_f& s) {
 		sle_t res = s(x);
 		auto& A = res.first;
 		auto& b = res.second;
+
+		myassert(A[0].size() < A.size());
 
 		int count = b.size() - x.size() + 1;
 
@@ -204,6 +265,8 @@ sle_f square_cast_3(const sle_f& s) {
 		sle_t res = s(x);
 		auto& A = res.first;
 		auto& b = res.second;
+
+		myassert(A[0].size() < A.size());
 
 		int count = b.size() - x.size() + 1;
 
@@ -249,9 +312,30 @@ sle_f square_cast_3(const sle_f& s) {
 }
 
 //-----------------------------------------------------------------------------
+sle_f square_cast_4(const sle_f& s) {
+	return [s] (const xn_t& x) -> sle_t {
+		// Получаем значение текущей СЛАУ
+		sle_t res = s(x);
+		auto& A = res.first;
+		auto& b = res.second;
+
+		myassert(A[0].size() < A.size());
+
+		matrix_t AR;
+		xn_t bR;
+		mul_t(A, A, AR);
+		mul_t(A, b, bR);
+
+		return {AR, bR};
+	};
+}
+
+//-----------------------------------------------------------------------------
 solved_t solve(const sle_f& s, const fnm_f& f, const xn_t& x_0, int maxiter, double eps, bool is_log) {
-	vector<xn_t> process;
-	process.push_back(x_0);
+	vector<xn_t> x_process;
+	vector<double> beta_process;
+	x_process.push_back(x_0);
+	beta_process.push_back(0);
 	xn_t x_k = x_0, x_kv, dx;
 	int it = 0;
 	while (it < maxiter && length(calc_vector_function(f, x_k)) > eps) {
@@ -262,11 +346,15 @@ solved_t solve(const sle_f& s, const fnm_f& f, const xn_t& x_0, int maxiter, dou
 
 		#ifdef _DEBUG
 		int An = A.size();
-		assert(An == b.size());
-		for (auto& i : A) assert(An == i.size());
+		myassert(An == b.size());
+		for (auto& i : A) 
+			myassert(An == i.size());
 		#endif
 
 		solve_gauss(A, b, dx);
+
+		if (dx.size() == 0)
+			break;
 
 		double beta = 1;
 		x_kv = x_k + beta*dx;
@@ -278,7 +366,8 @@ solved_t solve(const sle_f& s, const fnm_f& f, const xn_t& x_0, int maxiter, dou
 		x_k = x_kv;
 		it++;
 
-		process.push_back(x_k);
+		x_process.push_back(x_k);
+		beta_process.push_back(beta);
 
 		if (is_log) {
 			cout << "Iteration: " << setw(5) << it;
@@ -288,5 +377,5 @@ solved_t solve(const sle_f& s, const fnm_f& f, const xn_t& x_0, int maxiter, dou
 		}
 	}
 
-	return {it, length(calc_vector_function(f, x_k)), x_k, process};
+	return {it, length(calc_vector_function(f, x_k)), x_k, x_process, beta_process};
 }

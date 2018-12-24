@@ -3,6 +3,9 @@
 #include <iostream>
 #include <functional>
 #include <vector>
+#include "../1/matrix.h"
+
+#define myassert(A) {if (!(A)) { std::cerr << "ERROR: " << #A << endl; throw std::exception(); }}
 
 using namespace std;
 
@@ -13,6 +16,12 @@ typedef vector<fn_f> fnm_f; // f : R^n -> R^m нелинейная систем�
 typedef function<matrix_t(const xn_t&)> jnm_f; // j : R^n -> R^(m*n) матрица якоби
 typedef pair<matrix_t, xn_t> sle_t; // Тип СЛАУ
 typedef function<sle_t(const xn_t&)> sle_f; // Функция, которая возвращает СЛАУ
+typedef function<sle_f(const sle_f&)> sqr_f; // Функция, преобразующая СЛАУ к квадратному виду
+
+Matrix to(const matrix_t& a);
+Matrix to(const xn_t& a);
+matrix_t to_matrix(const Matrix& a);
+xn_t to_vec(const Matrix& a);
 
 double length(const xn_t& x);
 xn_t operator+(const xn_t& a, const xn_t& b);
@@ -21,6 +30,8 @@ xn_t operator*(double b, const xn_t& a);
 ostream& operator<<(ostream& out, const xn_t& v);
 
 void solve_gauss(const matrix_t& a, const xn_t& b, xn_t& dx);
+void mul_t(const matrix_t& a, const matrix_t& b, matrix_t& result);
+void mul_t(const matrix_t& a, const xn_t& b, xn_t& result);
 
 double calc_partial_derivative_numeric(const fn_f& f, const xn_t& x, int i);
 matrix_t calc_jacobi_matrix_numeric(const fnm_f& f, const xn_t& x);
@@ -28,16 +39,19 @@ jnm_f calc_jacobi_matrix_numeric_functon(const fnm_f& f);
 
 xn_t calc_vector_function(const fnm_f& f, const xn_t& x);
 sle_f get_sle_function(const jnm_f& j, const fnm_f& f);
+sle_f square_cast_none(const sle_f& s);
 sle_f square_cast_1(const sle_f& s);
 sle_f square_cast_2(const sle_f& s);
 sle_f square_cast_3(const sle_f& s);
+sle_f square_cast_4(const sle_f& s);
 
 struct solved_t
 {
 	int iterations;
 	double residual;
 	xn_t point;
-	vector<xn_t> process;
+	vector<xn_t> x_process;
+	vector<double> beta_process;
 };
 
 solved_t solve(
