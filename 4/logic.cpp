@@ -337,8 +337,10 @@ solved_t solve(const sle_f& s, const fnm_f& f, const xn_t& x_0, int maxiter, dou
 	x_process.push_back(x_0);
 	beta_process.push_back(0);
 	xn_t x_k = x_0, x_kv, dx;
+
+	double f_0 = length(calc_vector_function(f, x_k));
 	int it = 0;
-	while (it < maxiter && length(calc_vector_function(f, x_k)) > eps) {
+	while (it < maxiter && length(calc_vector_function(f, x_k))/f_0 > eps) {
 		auto sle = s(x_k);
 		auto& A = sle.first;
 		auto& b = sle.second;

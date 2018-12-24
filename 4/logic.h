@@ -45,6 +45,13 @@ sle_f square_cast_2(const sle_f& s);
 sle_f square_cast_3(const sle_f& s);
 sle_f square_cast_4(const sle_f& s);
 
+template<typename T>
+function<T(const T&)> add(const function<T(const T&)>& f, const function<T(const T&)>& g) {
+	return [f, g] (const T& t) -> T {
+		return f(g(t));
+	};
+}
+
 struct solved_t
 {
 	int iterations;

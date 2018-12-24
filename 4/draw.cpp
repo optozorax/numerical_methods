@@ -321,7 +321,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 	{
 	vec2 a(0.5, 3);
-	Picture_sin_and_line pic(a, {3, 5});
+	Picture_sin_and_line pic(a, {3, 5}, false, square_cast_none, 100, 1e-10);
 	draw_picture(pic, L"sin_and_line_4lab.bmp", pic_size);
 	}
 
@@ -336,6 +336,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	{
 	circle a(0, 0, 0.8), b(sqrt(2.0)/2, sqrt(2.0)/2, 0.2);
 	line c = {point(sqrt(2.0)/2, sqrt(2.0)/2), point(-1, 0)};
+	line c = {point(sqrt(2.0)*(1.0/2.0-0.1), sqrt(2.0)*(1.0/2.0-0.1)), point(-1, 0)};
 	Picture_two_circles_and_line pic(a, b, c, {-1, 0.5}, false, square_cast_3, 100, 1e-10);
 	draw_picture(pic, L"two_circles_and_line_4lab.bmp", pic_size);
 	}
