@@ -111,6 +111,38 @@ $$ \varepsilon = 10^{-14}, \quad iterations_{max} = 10000, \quad start = \begin{
 ЛОС Диаг. & $88$ & $6.6 \cdot 10^{-15}$ & $33.56$ мкс \\ \hline
 \end{tabu}
 
+\vspace{5mm}
+
+\setlength{\tabcolsep}{2pt}
+\tabulinesep=0.3mm
+\noindent\begin{tabu}{|X[-1,l]|X[-1,l]|X[-1,l]|X[-1,l]|}
+\hline
+Метод & Итераций & Действий за итерацию & Всего действий \\ \hline
+Якоби & $132$ & $2n^2+4n$ & $264n^2+528n$ \\ \hline
+Гаусс-Зейдель & $57$ & $2n^2+4n$ & $114n^2+228n$ \\ \hline
+МСГ LU(sq) & $10$ & $8n^2+12n$ & $80n^2+120n$ \\ \hline
+ЛОС & $119$ & $2n^2+14n$ & $238n^2+1666n$ \\ \hline
+ЛОС LU(sq) & $26$ & $5n^2+14n$ & $130n^2+364n$ \\ \hline
+ЛОС Диаг. & $88$ & $2n^2+17n$ & $176n^2+1496n$ \\ \hline
+\end{tabu}
+
+\vspace{5mm}
+
+Эта же таблица в пересчете, что каждая матрица имеет 7 диагоналей:
+
+\setlength{\tabcolsep}{2pt}
+\tabulinesep=0.3mm
+\noindent\begin{tabu}{|X[-1,l]|X[-1,l]|X[-1,l]|X[-1,l]|}
+\hline
+Метод & Итераций & Действий за итерацию & Всего действий \\ \hline
+Якоби & $132$ & $18n$ & $2376n$ \\ \hline
+Гаусс-Зейдель & $57$ & $18n$ & $1026n$ \\ \hline
+МСГ LU(sq) & $10$ & $72n$ & $720n$ \\ \hline
+ЛОС & $119$ & $28n$ & $3332n$ \\ \hline
+ЛОС LU(sq) & $26$ & $52n$ & $1352n$ \\ \hline
+ЛОС Диаг. & $88$ & $31n$ & $2728n$ \\ \hline
+\end{tabu}
+
 \subsection{Большой тест 0945}
 
 \setlength{\tabcolsep}{2pt}
