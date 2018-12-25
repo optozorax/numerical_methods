@@ -1,4 +1,5 @@
 #include <sstream>
+#include <fstream>
 #include <twg/image/image_drawing.h>
 
 #include "logic.h"
@@ -27,6 +28,9 @@ class Picture
 {
 public:
 	void init_solve(const pair<sle_f, fnm_f>& p, const xn_t& x_0, bool is_numeric, const sqr_f& square_cast, int iterations, double residual) {
+		m_x_0 = x_0;
+		m_iterations = iterations;
+		m_residual = residual;
 		m_f = p.second;
 		if (is_numeric) {
 			auto j = calc_jacobi_matrix_numeric_functon(m_f);
@@ -50,9 +54,18 @@ public:
 			result.push_back(vec2(i[0], i[1]));
 		return result;
 	}
+
+	xn_t get_x_0(void) const { return m_x_0; }
+	int get_iterations(void) const { return m_iterations; }
+	double get_residual(void) const { return m_residual; }
+	solved_t get_solved(void) const { return m_solved; }
 protected:
 	solved_t m_solved;
 	fnm_f m_f;
+
+	xn_t m_x_0;
+	int m_iterations;
+	double m_residual;
 };
 
 //-----------------------------------------------------------------------------
@@ -283,7 +296,7 @@ void draw_picture(const Picture& pic, wstring filename, int pic_size) {
 		auto a = brd.toImg(process[i]);
 		auto b = brd.toImg(process[i+1]);
 
-		img.setPen(Pen(1, Green));
+		img.setPen(Pen(0.7, Green));
 		img.drawLine(a, b);
 	}
 
@@ -292,58 +305,103 @@ void draw_picture(const Picture& pic, wstring filename, int pic_size) {
 		auto a = brd.toImg(process[i]);
 
 		img.setBrush(Brush(Green));
-		img.drawPolygon(computeEllipse(Point_d(1.5, 1.5)).move(a));
+		img.drawPolygon(computeEllipse(Point_d(2.5, 2.5)).move(a));
 	}
 
-	saveToBmp(&img, filename);
+	saveToBmp(&img, filename + L".bmp");
+
+	// TODO добавить сюда вывод в файл процесса
+	ofstream fout(filename + L".txt");
+	fout << "x_0 = " << pic.get_x_0() << endl;
+	fout << "max_iter = " << pic.get_iterations() << endl;
+	fout << "required residual = " << pic.get_residual() << endl;
+
+	fout << endl;
+	auto solved = pic.get_solved();
+	fout << "k\tbeta\t|f|/|f0|\tpoint" << endl;
+	for (int i = 1; i < solved.x_process.size(); i++)
+		fout << i << "\t" << solved.beta_process[i] << "\t" << solved.residual_process[i] << "\t" << solved.x_process[i] << endl;
+	fout << endl;
+
+	switch (solved.exit_type) {
+		case EXIT_ITER: fout << "Exit by iterations" << endl; break;
+		case EXIT_RESIDUAL: fout << "Exit by residual" << endl; break;
+		case EXIT_STEP: fout << "Exit by step" << endl; break;
+		case EXIT_BETA: fout << "Exit by beta" << endl; break; 
+		case EXIT_ERROR: fout << "Exit by error" << endl; break;
+	}
+
+	fout << "iter = " << pic.get_solved().iterations << endl;
+	fout << "residual = " << pic.get_solved().residual << endl;
+	fout << "result point = " << pic.get_solved().point << endl;
 }
 
 int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
 	#ifdef _DEBUG
 		int pic_size = 50;
 	#else
-		int pic_size = 500;
+		int pic_size = 1000;
 	#endif
 
-	// Инициализация рисунка
-	{
-	circle a(0, 0, 1), b(5, 0, 1), c(10, 5, 5);
-	Picture_three_circles pic(a, b, c, true, true, true, {-1, -1, 13}, false, square_cast_none, 100, 1e-10);
-	draw_picture(pic, L"three_circles_4lab.bmp", pic_size);
-	}
+	auto make_images = [&](bool is_numeric, wstring append) {
+		{
+			circle a(0, 0, 1), b(5, 0, 1), c(10, 5, 5);
+			Picture_three_circles pic(a, b, c, false, false, false, { -1, -1, 13 }, is_numeric, square_cast_none, 100, 1e-10);
+			draw_picture(pic, L"img/three_circles_4lab" + append, pic_size);
+		}
 
-	{
-	//vec2 a(0.5, 0.5), b(3, 1), c(-1, 3);
-	vec2 a(0, 0), b(1, 2), c(3, 1); 
-	Picture_three_lines pic(a, b, c, {-3, -3}, false, square_cast_2, 100, 1e-10);
-	draw_picture(pic, L"three_lines_4lab.bmp", pic_size);
-	}
+		auto draw_three_lines = [&](int no, const sqr_f& sq) {
+			//vec2 a(0.5, 0.5), b(3, 1), c(-1, 3);
+			vec2 a(0, 0), b(1, 2), c(3, 1);
+			Picture_three_lines pic(a, b, c, { -3, -3 }, is_numeric, sq, 100, 1e-10);
+			draw_picture(pic, L"img/three_lines_4lab_" + to_wstring(no) + append, pic_size);
+		};
 
-	{
-	vec2 a(0.5, 3);
-	Picture_sin_and_line pic(a, {3, 5}, false, square_cast_none, 100, 1e-10);
-	draw_picture(pic, L"sin_and_line_4lab.bmp", pic_size);
-	}
+		draw_three_lines(2, square_cast_2);
+		draw_three_lines(3, square_cast_3);
+		draw_three_lines(4, square_cast_4);
 
-	{
-	//circle a(0, 0, 1), b(1, 0.7, 1.2); // Пересекаются в двух точках
-	circle a(0, 0, 0.8), b(sqrt(2.0)/2, sqrt(2.0)/2, 0.2); // Пересекаются в одной точке
-	//circle a(0, 0, 0.8), b(1, 0.7, 0.3); // Не пересекаются
-	Picture_two_circles pic(a, b, {-1, 0.5}, false, square_cast_none, 100, 1e-10);
-	draw_picture(pic, L"two_circles_4lab.bmp", pic_size);
-	}
+		{
+			vec2 a(2, 2);
+			Picture_sin_and_line pic(a, { -1, 1 }, is_numeric, square_cast_none, 100, 1e-10);
+			draw_picture(pic, L"img/sin_and_line_4lab" + append, pic_size);
+		}
 
-	{
-	circle a(0, 0, 0.8), b(sqrt(2.0)/2, sqrt(2.0)/2, 0.2);
-	line c = {point(sqrt(2.0)/2, sqrt(2.0)/2), point(-1, 0)};
-	line c = {point(sqrt(2.0)*(1.0/2.0-0.1), sqrt(2.0)*(1.0/2.0-0.1)), point(-1, 0)};
-	Picture_two_circles_and_line pic(a, b, c, {-1, 0.5}, false, square_cast_3, 100, 1e-10);
-	draw_picture(pic, L"two_circles_and_line_4lab.bmp", pic_size);
-	}
+		{
+			circle a(0, 0, 1), b(1, 0.7, 1.2); // Пересекаются в двух точках
+			Picture_two_circles pic(a, b, { -1, 0.5 }, is_numeric, square_cast_none, 100, 1e-10);
+			draw_picture(pic, L"img/two_circles_1_4lab" + append, pic_size);
+		}
 
-	{
-	circle a(0, 0, 1);
-	Picture_one_circle pic(a, {0.2, 0.5}, false, square_cast_1, 100, 1e-10);
-	draw_picture(pic, L"one_circle_4lab.bmp", pic_size);
-	}
+		{
+			circle a(0, 0, 0.8), b(sqrt(2.0) / 2, sqrt(2.0) / 2, 0.2); // Пересекаются в одной точке
+			Picture_two_circles pic(a, b, { -1, 0.5 }, is_numeric, square_cast_none, 100, 1e-10);
+			draw_picture(pic, L"img/two_circles_2_4lab" + append, pic_size);
+		}
+
+		{
+			circle a(0, 0, 0.8), b(1, 0.7, 0.3); // Не пересекаются
+			Picture_two_circles pic(a, b, { -1, 0.5 }, is_numeric, square_cast_none, 100, 1e-10);
+			draw_picture(pic, L"img/two_circles_3_4lab" + append, pic_size);
+		}
+
+		auto draw_two_circles_and_line = [&](int no, const sqr_f& sq) {
+			circle a(0, 0, 0.8), b(sqrt(2.0) / 2, sqrt(2.0) / 2, 0.2);
+			line c = { point(sqrt(2.0)*(1.0 / 2.0 - 0.1), sqrt(2.0)*(1.0 / 2.0 - 0.1)), point(-1, 0) };
+			Picture_two_circles_and_line pic(a, b, c, { -1, 0.5 }, is_numeric, sq, 100, 1e-10);
+			draw_picture(pic, L"img/two_circles_and_line_4lab_" + to_wstring(no) + append, pic_size);
+		};
+
+		draw_two_circles_and_line(2, square_cast_2);
+		draw_two_circles_and_line(3, square_cast_3);
+		draw_two_circles_and_line(4, square_cast_4);
+
+		{
+			circle a(0, 0, 1);
+			Picture_one_circle pic(a, { 0.2, 0.5 }, is_numeric, square_cast_1, 100, 1e-10);
+			draw_picture(pic, L"img/one_circle_4lab_1" + append, pic_size);
+		}
+	};
+	make_images(false, L"_analytic");
+	make_images(true, L"_numeric");
 }

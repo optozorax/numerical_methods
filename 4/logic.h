@@ -25,6 +25,7 @@ xn_t to_vec(const Matrix& a);
 
 double length(const xn_t& x);
 xn_t operator+(const xn_t& a, const xn_t& b);
+xn_t operator-(const xn_t& a, const xn_t& b);
 xn_t operator*(const xn_t& a, double b);
 xn_t operator*(double b, const xn_t& a);
 ostream& operator<<(ostream& out, const xn_t& v);
@@ -52,6 +53,15 @@ function<T(const T&)> add(const function<T(const T&)>& f, const function<T(const
 	};
 }
 
+enum exit_type_t
+{
+	EXIT_ITER,
+	EXIT_RESIDUAL,
+	EXIT_BETA,
+	EXIT_STEP,
+	EXIT_ERROR
+};
+
 struct solved_t
 {
 	int iterations;
@@ -59,6 +69,8 @@ struct solved_t
 	xn_t point;
 	vector<xn_t> x_process;
 	vector<double> beta_process;
+	vector<double> residual_process;
+	exit_type_t exit_type;
 };
 
 solved_t solve(

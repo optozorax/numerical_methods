@@ -86,6 +86,15 @@ xn_t operator+(const xn_t& a, const xn_t& b) {
 }
 
 //-----------------------------------------------------------------------------
+xn_t operator-(const xn_t& a, const xn_t& b) {
+	myassert(a.size() == b.size());
+	xn_t result(a.size());
+	for (int i = 0; i < a.size(); ++i)
+		result[i] = a[i] - b[i];
+	return result;
+}
+
+//-----------------------------------------------------------------------------
 xn_t operator*(const xn_t& a, double b) {
 	xn_t result(a.size());
 	for (int i = 0; i < a.size(); ++i)
@@ -229,7 +238,7 @@ sle_f square_cast_2(const sle_f& s) {
 
 		myassert(A[0].size() < A.size());
 
-		int count = b.size() - x.size() + 1;
+		int count = b.size() - x.size();
 
 		// Находим номера элементов, для которых f_i(x) минимальны
 		vector<pair<double, int>> b_sorted;
@@ -248,7 +257,7 @@ sle_f square_cast_2(const sle_f& s) {
 		int start = mins[0];
 
 		// Удаляем лишние строки
-		for (int i = mins.size()-1; i > 0; --i) {
+		for (int i = mins.size()-1; i >= 0; --i) {
 			A.erase(A.begin() + mins[i]);
 			b.erase(b.begin() + mins[i]);
 		}
@@ -334,13 +343,26 @@ sle_f square_cast_4(const sle_f& s) {
 solved_t solve(const sle_f& s, const fnm_f& f, const xn_t& x_0, int maxiter, double eps, bool is_log) {
 	vector<xn_t> x_process;
 	vector<double> beta_process;
+	vector<double> residual_process;
 	x_process.push_back(x_0);
 	beta_process.push_back(0);
+	residual_process.push_back(0);
 	xn_t x_k = x_0, x_kv, dx;
+	exit_type_t exit_type;
 
 	double f_0 = length(calc_vector_function(f, x_k));
 	int it = 0;
-	while (it < maxiter && length(calc_vector_function(f, x_k))/f_0 > eps) {
+	while (true) {
+		if (it > maxiter) {
+			exit_type = EXIT_ITER;
+			break;
+		}
+
+		if (length(calc_vector_function(f, x_k)) / f_0 < eps) {
+			exit_type = EXIT_RESIDUAL;
+			break;
+		}
+	
 		auto sle = s(x_k);
 		auto& A = sle.first;
 		auto& b = sle.second;
@@ -355,8 +377,10 @@ solved_t solve(const sle_f& s, const fnm_f& f, const xn_t& x_0, int maxiter, dou
 
 		solve_gauss(A, b, dx);
 
-		if (dx.size() == 0)
+		if (dx.size() == 0) {
+			exit_type = EXIT_ERROR;
 			break;
+		}
 
 		double beta = 1;
 		x_kv = x_k + beta*dx;
@@ -370,6 +394,7 @@ solved_t solve(const sle_f& s, const fnm_f& f, const xn_t& x_0, int maxiter, dou
 
 		x_process.push_back(x_k);
 		beta_process.push_back(beta);
+		residual_process.push_back(length(calc_vector_function(f, x_k)) / f_0);
 
 		if (is_log) {
 			cout << "Iteration: " << setw(5) << it;
@@ -377,7 +402,17 @@ solved_t solve(const sle_f& s, const fnm_f& f, const xn_t& x_0, int maxiter, dou
 			cout << ", B: " << setw(8) << beta;
 			cout << ", Residual: " << setw(8) << length(calc_vector_function(f, x_k)) << endl;
 		}
+
+		if (length(x_k - x_process[x_process.size() - 2]) < eps) {
+			exit_type = EXIT_STEP;
+			break;
+		}
+
+		if (fabs(beta) < eps) {
+			exit_type = EXIT_BETA;
+			break;
+		}
 	}
 
-	return {it, length(calc_vector_function(f, x_k)), x_k, x_process, beta_process};
+	return {it, length(calc_vector_function(f, x_k))/f_0, x_k, x_process, beta_process, residual_process, exit_type};
 }
