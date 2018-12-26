@@ -5,11 +5,11 @@
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
-pair<sle_f, fnm_f> one_circle(circle a) {
+pair<sle_f, fnmv_f> one_circle(circle a) {
 	//-------------------------------------------------------------------------
 	fn_f f1 = [a] (const xn_t& x) -> double { return circle_f(a, x); };
 
-	fnm_f f = {f1};
+	fnmv_f f = {f1};
 
 	//-------------------------------------------------------------------------
 	jnm_f j = [a] (const xn_t& x) -> matrix_t {
@@ -24,12 +24,12 @@ pair<sle_f, fnm_f> one_circle(circle a) {
 }
 
 //-----------------------------------------------------------------------------
-pair<sle_f, fnm_f> two_circles(circle a, circle b) {
+pair<sle_f, fnmv_f> two_circles(circle a, circle b) {
 	//-------------------------------------------------------------------------
 	fn_f f1 = [a] (const xn_t& x) -> double { return circle_f(a, x); };
 	fn_f f2 = [b] (const xn_t& x) -> double { return circle_f(b, x); };
 
-	fnm_f f = {f1, f2};
+	fnmv_f f = {f1, f2};
 
 	//-------------------------------------------------------------------------
 	jnm_f j = [a, b] (const xn_t& x) -> matrix_t {
@@ -47,13 +47,13 @@ pair<sle_f, fnm_f> two_circles(circle a, circle b) {
 }
 
 //-----------------------------------------------------------------------------
-pair<sle_f, fnm_f> two_circles_and_line(circle a, circle b, line l) {
+pair<sle_f, fnmv_f> two_circles_and_line(circle a, circle b, line l) {
 	//-------------------------------------------------------------------------
 	fn_f f1 = [a] (const xn_t& x) -> double { return circle_f(a, x); };
 	fn_f f2 = [b] (const xn_t& x) -> double { return circle_f(b, x); };
 	fn_f f3 = [l] (const xn_t& x) -> double { return line_f(l, x); };
 
-	fnm_f f = {f1, f2, f3};
+	fnmv_f f = {f1, f2, f3};
 
 	//-------------------------------------------------------------------------
 	jnm_f j = [a, b, l] (const xn_t& x) -> matrix_t {
@@ -74,13 +74,13 @@ pair<sle_f, fnm_f> two_circles_and_line(circle a, circle b, line l) {
 }
 
 //-----------------------------------------------------------------------------
-pair<sle_f, fnm_f> three_lines(line a, line b, line c) {
+pair<sle_f, fnmv_f> three_lines(line a, line b, line c) {
 	//-------------------------------------------------------------------------
 	fn_f f1 = [a] (const xn_t& x) -> double { return line_f(a, x); };
 	fn_f f2 = [b] (const xn_t& x) -> double { return line_f(b, x); };
 	fn_f f3 = [c] (const xn_t& x) -> double { return line_f(c, x); };
 
-	fnm_f f = {f1, f2, f3};
+	fnmv_f f = {f1, f2, f3};
 
 	//-------------------------------------------------------------------------
 	jnm_f j = [a, b, c] (const xn_t& x) -> matrix_t {
@@ -101,7 +101,7 @@ pair<sle_f, fnm_f> three_lines(line a, line b, line c) {
 }
 
 //-----------------------------------------------------------------------------
-pair<sle_f, fnm_f> sin_and_line(point b) {
+pair<sle_f, fnmv_f> sin_and_line(point b) {
 	//-------------------------------------------------------------------------
 	line l = {point(0, 0), b};
 	fn_f f1 = [l] (const xn_t& x) -> double {return line_f(l, x); };
@@ -110,7 +110,7 @@ pair<sle_f, fnm_f> sin_and_line(point b) {
 		return x[1]-sin(x[0]);
 	};
 
-	fnm_f f = {f1, f2};
+	fnmv_f f = {f1, f2};
 
 	//-------------------------------------------------------------------------
 	jnm_f j = [l] (const xn_t& x) -> matrix_t {
@@ -129,13 +129,13 @@ pair<sle_f, fnm_f> sin_and_line(point b) {
 }
 
 //-----------------------------------------------------------------------------
-pair<sle_f, fnm_f> three_circles(circle a, circle b, circle c, bool a_in, bool b_in, bool c_in) {
+pair<sle_f, fnmv_f> three_circles(circle a, circle b, circle c, bool a_in, bool b_in, bool c_in) {
 	//-------------------------------------------------------------------------
 	fn_f f1 = [a, a_in] (const xn_t& x) -> double { return circles_f(a, x, a_in); };
 	fn_f f2 = [b, b_in] (const xn_t& x) -> double { return circles_f(b, x, b_in); };
 	fn_f f3 = [c, c_in] (const xn_t& x) -> double { return circles_f(c, x, c_in); };
 
-	fnm_f f = {f1, f2, f3};
+	fnmv_f f = {f1, f2, f3};
 
 	//-------------------------------------------------------------------------
 	jnm_f j = [a, b, c, a_in, b_in, c_in] (const xn_t& x) -> matrix_t {

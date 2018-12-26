@@ -27,17 +27,21 @@ void draw_line(ImageDrawing_aa& img, const FindBorders& brd, vec2 a, vec2 b) {
 class Picture
 {
 public:
-	void init_solve(const pair<sle_f, fnm_f>& p, const xn_t& x_0, bool is_numeric, const sqr_f& square_cast, int iterations, double residual) {
+	void init_solve(const pair<sle_f, fnmv_f>& p, const xn_t& x_0, bool is_numeric, const sqr_f& square_cast, int iterations, double residual) {
 		m_x_0 = x_0;
 		m_iterations = iterations;
 		m_residual = residual;
-		m_f = p.second;
 		if (is_numeric) {
-			auto j = calc_jacobi_matrix_numeric_functon(m_f);
-			auto sle = get_sle_function(j, m_f);
-			m_solved = solve(square_cast(sle), p.second, x_0, iterations, residual, false);
-		} else
-			m_solved = solve(square_cast(p.first), p.second, x_0, iterations, residual, false);
+			auto j = calc_jacobi_matrix_numeric_functon(p.second);
+			auto sle = get_sle_function(j, p.second);
+			sle = square_cast(sle);
+			m_solved = solve(sle, x_0, iterations, residual, false);
+			m_f = get_f(sle);
+		} else {
+			auto sle = square_cast(p.first);
+			m_solved = solve(sle, x_0, iterations, residual, false);
+			m_f = get_f(sle);
+		}
 	}
 	virtual void init_brd(FindBorders& brd) const {
 		brd.process(vec2(0, 0));
@@ -45,7 +49,7 @@ public:
 			brd.process(vec2(m_solved.x_process[i][0], m_solved.x_process[i][1]));
 	}
 	virtual double getResidual(vec2 a) const {
-		return length(calc_vector_function(m_f, {a.x, a.y}));
+		return length(m_f({ a.x, a.y }));
 	}
 	virtual void draw(ImageDrawing_aa& img, const FindBorders& brd) const = 0;
 	vector<vec2> getProcess(void) const {
@@ -83,7 +87,6 @@ public:
 	}
 
 	void draw(ImageDrawing_aa& img, const FindBorders& brd) const {
-		img.setPen(Pen(1, Blue));
 		img.drawPolyline(calc_circle(m_a, brd));
 		img.drawPolyline(calc_circle(m_b, brd));
 	}
@@ -127,7 +130,6 @@ public:
 	}
 
 	void draw(ImageDrawing_aa& img, const FindBorders& brd) const {
-		img.setPen(Pen(1, Blue));
 		img.drawPolyline(calc_circle(m_a, brd));
 		img.drawPolyline(calc_circle(m_b, brd));
 		draw_line(img, brd, m_la, m_lb);
@@ -157,16 +159,17 @@ public:
 
 	double getResidual(vec2 a) const {
 		double r = fabs(sqrt(sqr(m_a.c.x-a.x)+sqr(m_a.c.y-a.y))-m_a.r);
-		return length(calc_vector_function(m_f, {a.x, a.y, r}));
+		return length(m_f({a.x, a.y, r}));
 	}
 
 	void draw(ImageDrawing_aa& img, const FindBorders& brd) const {
-		img.setPen(Pen(1, Blue));
 		img.drawPolyline(calc_circle(m_a, brd));
 		img.drawPolyline(calc_circle(m_b, brd));
 		img.drawPolyline(calc_circle(m_c, brd));
 
-		img.setPen(Pen(1, Orange));
+		Pen oldPen = img.getPen();
+		oldPen.clr = Orange;
+		img.setPen(oldPen);
 		img.drawPolyline(calc_circle(m_res_circle, brd));
 	}
 private:
@@ -216,8 +219,6 @@ public:
 	}
 
 	void draw(ImageDrawing_aa& img, const FindBorders& brd) const {
-		img.setPen(Pen(1, Blue));
-
 		draw_line(img, brd, m_a, m_b);
 
 		// Рисуем синусоиду
@@ -266,6 +267,7 @@ void draw_picture(const Picture& pic, wstring filename, int pic_size) {
 		for (int j = 0; j < size.y; j++) {
 			double v = mas[i][j];
 			double pos = (v - min1)/(max1-min1);
+			pos = sqrt(pos);
 			pos = int(pos*step_count)/step_count;
 			img[Point_i(i, j)] = getColorBetween(pos, White, Black);
 		}
@@ -288,6 +290,7 @@ void draw_picture(const Picture& pic, wstring filename, int pic_size) {
 		img.drawLine(ya, yb);
 	}
 
+	img.setPen(Pen(2, Blue));
 	pic.draw(img, brd);
 
 	// Рисуем линии поиска решения
@@ -296,7 +299,7 @@ void draw_picture(const Picture& pic, wstring filename, int pic_size) {
 		auto a = brd.toImg(process[i]);
 		auto b = brd.toImg(process[i+1]);
 
-		img.setPen(Pen(0.7, Green));
+		img.setPen(Pen(3.5, setAlpha(Green, 100)));
 		img.drawLine(a, b);
 	}
 
@@ -304,8 +307,8 @@ void draw_picture(const Picture& pic, wstring filename, int pic_size) {
 	for (int i = 0; i < process.size(); i++) {
 		auto a = brd.toImg(process[i]);
 
-		img.setBrush(Brush(Green));
-		img.drawPolygon(computeEllipse(Point_d(2.5, 2.5)).move(a));
+		img.setBrush(Brush(setAlpha(twg::Miku, 200)));
+		img.drawPolygon(computeEllipse(Point_d(4, 4)).move(a));
 	}
 
 	saveToBmp(&img, filename + L".bmp");
@@ -340,15 +343,15 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	#ifdef _DEBUG
 		int pic_size = 50;
 	#else
-		int pic_size = 1000;
+		int pic_size = 700;
 	#endif
 
 	auto make_images = [&](bool is_numeric, wstring append) {
-		{
+		/*{
 			circle a(0, 0, 1), b(5, 0, 1), c(10, 5, 5);
 			Picture_three_circles pic(a, b, c, false, false, false, { -1, -1, 13 }, is_numeric, square_cast_none, 100, 1e-10);
 			draw_picture(pic, L"img/three_circles_4lab" + append, pic_size);
-		}
+		}*/
 
 		auto draw_three_lines = [&](int no, const sqr_f& sq) {
 			//vec2 a(0.5, 0.5), b(3, 1), c(-1, 3);
@@ -360,6 +363,12 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		draw_three_lines(2, square_cast_2);
 		draw_three_lines(3, square_cast_3);
 		draw_three_lines(4, square_cast_4);
+
+		{
+			vec2 a(0.5, 0.5), b(3, 1), c(-1, 3);
+			Picture_three_lines pic(a, b, c, { -3, -3 }, is_numeric, composition(square_cast_3, square_cast_mul({1, 1, 10})), 100, 1e-10);
+			draw_picture(pic, L"img/three_lines_4lab_3_weight" + append, pic_size);
+		}
 
 		{
 			vec2 a(2, 2);
@@ -375,8 +384,21 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 		{
 			circle a(0, 0, 0.8), b(sqrt(2.0) / 2, sqrt(2.0) / 2, 0.2); // Пересекаются в одной точке
-			Picture_two_circles pic(a, b, { -1, 0.5 }, is_numeric, square_cast_none, 100, 1e-10);
-			draw_picture(pic, L"img/two_circles_2_4lab" + append, pic_size);
+			{
+				// Начальное приближение лежит на оси симметрии
+				Picture_two_circles pic(a, b, { 0.156405, 0.974966 }, is_numeric, square_cast_none, 100, 1e-10);
+				draw_picture(pic, L"img/two_circles_2.1_4lab" + append, pic_size);
+			}
+			{
+				// Начальное приближение лежит на линии, соединяющей центры окружностей
+				Picture_two_circles pic(a, b, { -sqrt(2.0), -sqrt(2.0)+0.01 }, is_numeric, square_cast_none, 100, 1e-10);
+				draw_picture(pic, L"img/two_circles_2.2_4lab" + append, pic_size);
+			}
+			{
+				// Начальное приближение лежит в центре одной из окружностей
+				Picture_two_circles pic(a, b, { b.c.x, b.c.y + 0.01 }, is_numeric, square_cast_none, 100, 1e-10);
+				draw_picture(pic, L"img/two_circles_2.3_4lab" + append, pic_size);
+			}
 		}
 
 		{

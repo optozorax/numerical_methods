@@ -108,6 +108,15 @@ xn_t operator*(double b, const xn_t& a) {
 }
 
 //-----------------------------------------------------------------------------
+xn_t operator*(const xn_t& a, const xn_t& b) {
+	myassert(a.size() == b.size());
+	xn_t result(a.size());
+	for (int i = 0; i < a.size(); ++i)
+		result[i] = a[i] * b[i];
+	return result;
+}
+
+//-----------------------------------------------------------------------------
 ostream& operator<<(ostream& out, const xn_t& v) {
 	out << "(";
 	for (int i = 0; i < v.size()-1; ++i)
@@ -120,7 +129,7 @@ ostream& operator<<(ostream& out, const xn_t& v) {
 double calc_partial_derivative_numeric(const fn_f& f, const xn_t& x_in, int i) {
 	myassert(i < x_in.size());
 
-	double step = 1e-9;
+	double step = 1;
 	if (x_in[i] != 0)
 		step = x_in[i]*step;
 
@@ -131,13 +140,13 @@ double calc_partial_derivative_numeric(const fn_f& f, const xn_t& x_in, int i) {
 	x[i] = x[i] + 2*step; double x3 = f(x); x[i] = x[i] - 2*step;
 	x[i] = x[i] - 2*step; double x4 = f(x); x[i] = x[i] + 2*step;
 
-	double result = (-x3 + 8*x1 - 8*x2 + x4)/(12.0*step);
-	//double result = (x1 - x0) / step;
+	//double result = (-x3 + 8*x1 - 8*x2 + x4)/(12.0*step);
+	double result = (x1 - x0) / step;
 	return result;
 }
 
 //-----------------------------------------------------------------------------
-matrix_t calc_jacobi_matrix_numeric(const fnm_f& f, const xn_t& x) {
+matrix_t calc_jacobi_matrix_numeric(const fnmv_f& f, const xn_t& x) {
 	matrix_t result(f.size(), xn_t(x.size()));
 	for (int i = 0; i < f.size(); ++i) {
 		for (int j = 0; j < x.size(); ++j) {
@@ -148,12 +157,12 @@ matrix_t calc_jacobi_matrix_numeric(const fnm_f& f, const xn_t& x) {
 }
 
 //-----------------------------------------------------------------------------
-jnm_f calc_jacobi_matrix_numeric_functon(const fnm_f& f) {
+jnm_f calc_jacobi_matrix_numeric_functon(const fnmv_f& f) {
 	return bind(calc_jacobi_matrix_numeric, f, placeholders::_1);
 }
 
 //-----------------------------------------------------------------------------
-xn_t calc_vector_function(const fnm_f& f, const xn_t& x) {
+xn_t calc_vector_function(const fnmv_f& f, const xn_t& x) {
 	xn_t result;
 	for (const auto& i : f)
 		result.push_back(i(x));
@@ -161,7 +170,7 @@ xn_t calc_vector_function(const fnm_f& f, const xn_t& x) {
 }
 
 //-----------------------------------------------------------------------------
-sle_f get_sle_function(const jnm_f& j, const fnm_f& f) {
+sle_f get_sle_function(const jnm_f& j, const fnmv_f& f) {
 	return [j, f] (const xn_t& x) -> sle_t {
 		matrix_t a = j(x);
 		xn_t b = calc_vector_function(f, x);
@@ -340,7 +349,44 @@ sle_f square_cast_4(const sle_f& s) {
 }
 
 //-----------------------------------------------------------------------------
-solved_t solve(const sle_f& s, const fnm_f& f, const xn_t& x_0, int maxiter, double eps, bool is_log) {
+fnm_f get_f(const sle_f& s) {
+	return [s](const xn_t& x) -> xn_t {
+		return s(x).second;
+	};
+}
+
+//-----------------------------------------------------------------------------
+sqr_f square_cast_mul(const xn_t& m) { 
+	return [m](const sle_f& s) -> sle_f {
+		return [m, s] (const xn_t& x) -> sle_t {
+			auto res = s(x);
+			auto& A = res.first;
+			auto& b = res.second;
+
+			myassert(m.size() == A.size());
+			myassert(m.size() == b.size());
+
+			for (int i = 0; i < A.size(); i++) {
+				for (int j = 0; j < A[i].size(); j++) {
+					A[i][j] *= m[i];
+				}
+			}
+			b = b * m;
+
+			return {A, b};
+		};
+	};
+}
+
+//-----------------------------------------------------------------------------
+sqr_f composition(const sqr_f& f, const sqr_f& g) {
+	return [f, g](const sle_f& t) -> sle_f {
+		return f(g(t));
+	};
+}
+
+//-----------------------------------------------------------------------------
+solved_t solve(const sle_f& s, const xn_t& x_0, int maxiter, double eps, bool is_log) {
 	vector<xn_t> x_process;
 	vector<double> beta_process;
 	vector<double> residual_process;
@@ -350,7 +396,9 @@ solved_t solve(const sle_f& s, const fnm_f& f, const xn_t& x_0, int maxiter, dou
 	xn_t x_k = x_0, x_kv, dx;
 	exit_type_t exit_type;
 
-	double f_0 = length(calc_vector_function(f, x_k));
+	auto f = get_f(s);
+
+	double f_0 = length(f(x_k));
 	int it = 0;
 	while (true) {
 		if (it > maxiter) {
@@ -358,7 +406,7 @@ solved_t solve(const sle_f& s, const fnm_f& f, const xn_t& x_0, int maxiter, dou
 			break;
 		}
 
-		if (length(calc_vector_function(f, x_k)) / f_0 < eps) {
+		if (length(f(x_k)) / f_0 < eps) {
 			exit_type = EXIT_RESIDUAL;
 			break;
 		}
@@ -384,7 +432,7 @@ solved_t solve(const sle_f& s, const fnm_f& f, const xn_t& x_0, int maxiter, dou
 
 		double beta = 1;
 		x_kv = x_k + beta*dx;
-		while (length(calc_vector_function(f, x_kv)) > length(calc_vector_function(f, x_k))) {
+		while (length(f(x_kv)) > length(f(x_k))) {
 			beta /= 2.0;
 			x_kv = x_k + beta * dx;
 		}
@@ -394,13 +442,13 @@ solved_t solve(const sle_f& s, const fnm_f& f, const xn_t& x_0, int maxiter, dou
 
 		x_process.push_back(x_k);
 		beta_process.push_back(beta);
-		residual_process.push_back(length(calc_vector_function(f, x_k)) / f_0);
+		residual_process.push_back(length(f(x_k)) / f_0);
 
 		if (is_log) {
 			cout << "Iteration: " << setw(5) << it;
 			cout << scientific << setprecision(2);
 			cout << ", B: " << setw(8) << beta;
-			cout << ", Residual: " << setw(8) << length(calc_vector_function(f, x_k)) << endl;
+			cout << ", Residual: " << setw(8) << length(f(x_k)) << endl;
 		}
 
 		if (length(x_k - x_process[x_process.size() - 2]) < eps) {
@@ -414,5 +462,5 @@ solved_t solve(const sle_f& s, const fnm_f& f, const xn_t& x_0, int maxiter, dou
 		}
 	}
 
-	return {it, length(calc_vector_function(f, x_k))/f_0, x_k, x_process, beta_process, residual_process, exit_type};
+	return {it, length(f(x_k))/f_0, x_k, x_process, beta_process, residual_process, exit_type};
 }
