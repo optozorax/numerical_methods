@@ -1,4 +1,36 @@
-\mytitlepage{прикладной математики}{4}{Численные методы}{Решение систем нелинейных уравнений методов Ньютона}{ПМ-63}{Шепрут И.И.}{Все}{Задорожный А.Г.}{2018}
+\pgfplotstableset{
+	begin table={\rowcolors{2}{gray!25}{white}\begin{tabular}},
+	end table=\end{tabular},
+}
+
+\newcommand{\inputtable}[1]{
+{\scriptsize
+\pgfplotstabletypeset[
+	columns/k/.style={column name=$k$,},
+	columns/beta/.style={sci zerofill,precision=1,sci 10e, column name=$\beta$,},
+	columns/residual/.style={sci zerofill,precision=1,sci 10e, column name={$\frac{||f(\mathbf{x}_k)||}{f(\mathbf{x}_0)}$},},
+	columns/x/.style={zerofill, precision=8, column name={$x$}},
+	columns/y/.style={zerofill, precision=8, column name={$y$}, column type/.add={}{|},},
+	every head row/.style={before row=\hline,after row=\hline\hline}, 
+	every last row/.style={after row=\hline},
+	column type/.add={|}{},
+	col sep=tab,
+]{#1.dat}}
+}
+
+\newcommand{\insertcomparison}[2]{
+\noindent\begin{tabu}{X[c]X[c]}
+\multicolumn{2}{c}{\textbf{Вариант приведения к квадратному виду:} $#2$} \\
+Аналитическое вычисление матрицы Якоби &
+Численное вычисление матрицы Якоби \\
+\noindent\includegraphics[width=.48\textwidth]{#1_analytic.png} & 
+\noindent\includegraphics[width=.48\textwidth]{#1_numeric.png} \\
+\inputtable{#1_analytic} & 
+\inputtable{#1_numeric} \\
+\end{tabu}
+}
+
+\mytitlepage{прикладной математики}{4}{Численные методы}{Решение систем нелинейных уравнений методом Ньютона}{ПМ-63}{Шепрут И.И.}{Все}{Задорожный А.Г.}{2018}
 
 \section{Цель работы}
 
@@ -6,57 +38,100 @@
 
 \section{Исследования}
 
-\textit{Краткое описание визуализации:} невязка в каждой точке рисуется после приведения СНУ к квадратному виду, сделано это для большей наглядности, потому что норма невязки от всех $m>n$ уравнений не настолько точно показывает куда будет двигаться метод. Так же, из-за того, что изображение получалось слишком светлым возле точки решения, невязка нормируется и возводится в квадрат, поэтому изображения стали более темными.
+\textit{Описание визуализации:} невязка в каждой точке рисуется после приведения СНУ к квадратному виду, сделано это для большей наглядности, потому что норма невязки от всех $m>n$ уравнений не настолько точно показывает куда будет двигаться метод. Так же, из-за того, что изображение получалось слишком светлым возле точки решения, невязка нормируется и возводится в квадрат, поэтому изображения стали более темными.
+
+Для всех запусков заданые следующие значения: максимальное количество итераций --- $30$, минимальная невязка --- $10^{-10}$, 
 
 \subsection{Одна окружность}
-\subsubsection{Аналитическое вычисление матрицы Якоби}
-\subsubsection{Численное вычисление матрицы Якоби}
+\insertcomparison{../img/one_circle_4lab_1}{1}
 \subsection{Две окружности}
 \subsubsection{Не пересекаются}
-\subsubsubsection{Аналитическое вычисление матрицы Якоби}
-\subsubsubsection{Численное вычисление матрицы Якоби}
+\insertcomparison{../img/two_circles_3_4lab}{-}
 \subsubsection{Пересекаются в одной точке}
-\subsubsubsection{Аналитическое вычисление матрицы Якоби}
-\subsubsubsection{Численное вычисление матрицы Якоби}
-\subsubsection{Начальное приближение лежит на оси симметрии}
-\subsubsubsection{Аналитическое вычисление матрицы Якоби}
-\subsubsubsection{Численное вычисление матрицы Якоби}
-\subsubsection{Начальное приближение лежит на оси, соединяющей центры окружностей}
-\textit{Комментарий:} добавлено немного смещения, потому что на на этой оси метод не сходится.
-\subsubsubsection{Аналитическое вычисление матрицы Якоби}
-\subsubsubsection{Численное вычисление матрицы Якоби}
-\subsubsection{Начальное приближение лежит в центре одной из окружностей}
-\textit{Комментарий:} добавлено немного смещения, потому что на на этой оси метод не сходится.
-\subsubsubsection{Аналитическое вычисление матрицы Якоби}
-\subsubsubsection{Численное вычисление матрицы Якоби}
+\myparagraph{Начальное приближение лежит на оси симметрии} 
+\insertcomparison{../img/two_circles_2_1_4lab}{-}
+\myparagraph{Начальное приближение лежит на оси, соединяющей центры окружностей} 
+\textit{Комментарий:} добавлено немного смещения, потому что на этой оси метод не сходится. 
+
+\insertcomparison{../img/two_circles_2_2_4lab}{-}
+\myparagraph{Начальное приближение лежит в центре одной из окружностей} 
+\textit{Комментарий:} добавлено немного смещения, потому что на этой оси метод не сходится. 
+
+\insertcomparison{../img/two_circles_2_3_4lab}{-}
 \subsubsection{Добавлена ещё прямая}
-\subsubsubsection{Аналитическое вычисление матрицы Якоби}
-\subsubsubsection{Численное вычисление матрицы Якоби}
+\insertcomparison{../img/two_circles_and_line_2_4lab}{2}
+\insertcomparison{../img/two_circles_and_line_3_4lab}{3}
+\insertcomparison{../img/two_circles_and_line_4_4lab}{4}
 \subsubsection{Пересекаются в двух точках}
-\subsubsubsection{Аналитическое вычисление матрицы Якоби}
-\subsubsubsection{Численное вычисление матрицы Якоби}
+\insertcomparison{../img/two_circles_1_4lab}{-}
 \subsection{Три попарно пересекающиеся прямые}
 \subsubsection{Невзвешенный вариант}
-\subsubsubsection{Аналитическое вычисление матрицы Якоби}
-\subsubsubsection{Численное вычисление матрицы Якоби}
+\insertcomparison{../img/three_lines_4lab_2}{2}
+\insertcomparison{../img/three_lines_4lab_3}{3}
+\insertcomparison{../img/three_lines_4lab_4}{4}
 \subsubsection{Взвешенный вариант}
-\subsubsubsection{Аналитическое вычисление матрицы Якоби}
-\subsubsubsection{Численное вычисление матрицы Якоби}
+\insertcomparison{../img/three_lines_4lab_3_weight}{3}
 \subsection{Прямая и синусоида}
-\subsubsection{Аналитическое вычисление матрицы Якоби}
-\subsubsection{Численное вычисление матрицы Якоби}
+\insertcomparison{../img/sin_and_line_4lab}{-}
 
 \subsection{Влияние размера шага при численном вычислении производной на сходимость метода}
 
-$$ \varepsilon = 10^{-14}, \quad iterations_{max} = 10000, \quad start = \begin{pmatrix} 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \end{pmatrix}^T $$
+Тест производится на системе из двух окружностей с прямой, вариант преобразования к квадратному виду: 3, вычисление матрицы Якоби: численное.
+
+\noindent\begin{tabu}{X[c]X[c]}
+\hline
+$h = 1$ & $h = 2^{-1}$ \\
+\inputtable{../img/two_circles_and_line_3_step_0_4lab_numeric} &
+\inputtable{../img/two_circles_and_line_3_step_1_4lab_numeric} \\
+\end{tabu}
+
+\vspace{3mm}
+
+\noindent\begin{tabu}{X[c]X[c]}
+\hline
+$h = 2^{-2}$ & $h = 2^{-3}$ \\
+\inputtable{../img/two_circles_and_line_3_step_2_4lab_numeric} &
+\inputtable{../img/two_circles_and_line_3_step_3_4lab_numeric} \\
+\end{tabu}
+
+\vspace{3mm}
+
+\noindent\begin{tabu}{X[c]X[c]}
+\hline
+$h = 2^{-4}$ & $h = 2^{-5}$ \\
+\inputtable{../img/two_circles_and_line_3_step_4_4lab_numeric} &
+\inputtable{../img/two_circles_and_line_3_step_5_4lab_numeric} \\
+\end{tabu}
+
+\vspace{3mm}
+
+\noindent\begin{tabu}{X[c]X[c]}
+\hline
+$h = 2^{-6}$ & $h = 2^{-7}$ \\
+\inputtable{../img/two_circles_and_line_3_step_6_4lab_numeric} &
+\inputtable{../img/two_circles_and_line_3_step_7_4lab_numeric} \\
+\end{tabu}
+
+\vspace{3mm}
+
+\noindent\begin{tabu}{X[c]X[c]}
+\hline
+$h = 2^{-8}$ & $h = 2^{-9}$ \\
+\inputtable{../img/two_circles_and_line_3_step_8_4lab_numeric} &
+\inputtable{../img/two_circles_and_line_3_step_9_4lab_numeric} \\
+\end{tabu}
 
 \section{Выводы}
 
 \noindent\begin{easylist}
 \ListProperties(Hang1=true, Margin2=12pt, Style1**=$\bullet$ , Hide2=1, Hide1=1)
-& По таблицам видно, что использование предобусловливания, даже диагонального, положительно влияет на скорость сходимости. 
-& В среднем самый быстрый метод - ЛОС LU(sq). 
-& Диагональное предобуславливание увеличивает скорость сходимости для МСГ больше, чем для ЛОС.
+& Метод Ньютона не находит все точки, или всё множество точек, где заданная СНУ равна нулю, он находит лишь одну точку, где невязка минимальна. Это проявляется в варианте с одной окржуностью (там имеется множество решений, а находится лишь точка), в  варианте с двумя пересекающимися окружностями (там имеется 2 решения, а находится ближнее к начальной точке), в варианте с тремя прямыми (там нет точки, где невязка равна нулю, но решение сходится к точке с минимальной невязкой). 
+& 2 вариант приведения к диагональному виду делает итоговую СНУ выглядящей как ломаную, поэтому метод на ней может сходиться не плавно.
+& 3 вариант приведения к диагональному виду так же делает итоговую СНУ выглядещей как ломаную, но при этом она более плавная. 
+& 4 вариант приведения к диагональному виду делает итоговую СНУ очень плавной, и видно, что на всех тестах невязка как будто непрерывна. И даже на тесте с тремя прямыми метод Ньютона сошелся за один шаг. Но на этот метод очень сильно влияет погрешность при вычислении производной, что опять же видно из теста с тремя прямыми (1 шаг против 7).
+& Взвешинвание одного из уравнений смещает решение к точкам этого уравнения.
+& Вычисление матрицы Якоби при помощи численного дифференцирования работает неплохо по сравнению с аналитическим вычислением. Оно влияет только на скорость сходимости, но на данных тестах незначительно.
+& Чем меньше шаг при взятии производной, тем лучше и быстрее сходится метод.
 \end{easylist}
 
 \section{Код программы}
@@ -64,4 +139,10 @@ $$ \varepsilon = 10^{-14}, \quad iterations_{max} = 10000, \quad start = \begin{
 \begin{multicols*}{2}
 \mycodeinput{c++}{../logic.h}{logic.h}
 \mycodeinput{c++}{../logic.cpp}{logic.cpp}
+\mycodeinput{c++}{../objects.h}{objects.h}
+\mycodeinput{c++}{../objects.cpp}{objects.cpp}
+\mycodeinput{c++}{../find_borders.h}{find\_borders.h}
+\mycodeinput{c++}{../find_borders.cpp}{find\_borders.cpp}
+\mycodeinput{c++}{../vector2.h}{vector2.h}
+\mycodeinput{c++}{../draw.cpp}{draw.cpp}
 \end{multicols*}

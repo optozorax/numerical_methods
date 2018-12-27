@@ -1,5 +1,6 @@
 #include <sstream>
 #include <fstream>
+#include <iomanip>
 #include <twg/image/image_drawing.h>
 
 #include "logic.h"
@@ -314,17 +315,29 @@ void draw_picture(const Picture& pic, wstring filename, int pic_size) {
 	saveToBmp(&img, filename + L".bmp");
 
 	// TODO добавить сюда вывод в файл процесса
-	ofstream fout(filename + L".txt");
-	fout << "x_0 = " << pic.get_x_0() << endl;
-	fout << "max_iter = " << pic.get_iterations() << endl;
-	fout << "required residual = " << pic.get_residual() << endl;
+	ofstream fout(filename + L".dat");
 
-	fout << endl;
 	auto solved = pic.get_solved();
-	fout << "k\tbeta\t|f|/|f0|\tpoint" << endl;
-	for (int i = 1; i < solved.x_process.size(); i++)
-		fout << i << "\t" << solved.beta_process[i] << "\t" << solved.residual_process[i] << "\t" << solved.x_process[i] << endl;
-	fout << endl;
+	fout << "k\tbeta\tresidual\t";
+	if (solved.point.size() == 2)
+		fout << "x\ty" << endl;
+	else
+		fout << "x\ty\tr" << endl;
+	for (int i = 1; i < solved.x_process.size(); i++) {
+		fout << i << setprecision(2) << scientific << "\t" << solved.beta_process[i] << "\t" << solved.residual_process[i] << "\t" << setprecision(10) << fixed; 
+		auto point = solved.x_process[i];
+		for (int j = 0; j < point.size() - 1; j++)
+			fout << point[j] << "\t";
+		fout << point.back() << endl;
+	}
+
+	fout << setprecision(10) << fixed;
+	fout << "# x_0 = " << pic.get_x_0() << endl;
+	fout << "# max_iter = " << pic.get_iterations() << endl;
+	fout << setprecision(2) << scientific;
+	fout << "# required residual = " << pic.get_residual() << endl;
+
+	fout << endl << "# ";
 
 	switch (solved.exit_type) {
 		case EXIT_ITER: fout << "Exit by iterations" << endl; break;
@@ -334,17 +347,34 @@ void draw_picture(const Picture& pic, wstring filename, int pic_size) {
 		case EXIT_ERROR: fout << "Exit by error" << endl; break;
 	}
 
-	fout << "iter = " << pic.get_solved().iterations << endl;
-	fout << "residual = " << pic.get_solved().residual << endl;
-	fout << "result point = " << pic.get_solved().point << endl;
+	fout << "# iter = " << pic.get_solved().iterations << endl;
+	fout << setprecision(2) << scientific;
+	fout << "# Residual = " << pic.get_solved().residual << endl;
+	fout << setprecision(10) << fixed;
+	fout << "# Result point = " << pic.get_solved().point << endl;
+
+	fout.close();
 }
 
 int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+	const double required_residual = 1e-10;
+	const int maxiter = 30;
 	#ifdef _DEBUG
 		int pic_size = 50;
 	#else
 		int pic_size = 700;
 	#endif
+
+	// Делаем таблицы для сходимости метода в зависимости от размера шага при взятии производной
+	for (int i = 0; i < 10; i++) {
+		partial_derivative_step = pow(2.0, double(-i));
+		circle a(0, 0, 0.8), b(sqrt(2.0) / 2, sqrt(2.0) / 2, 0.2);
+		line c = { point(sqrt(2.0)*(1.0 / 2.0 - 0.1), sqrt(2.0)*(1.0 / 2.0 - 0.1)), point(-1, 0) };
+		Picture_two_circles_and_line pic(a, b, c, { -1, 0.5 }, true, square_cast_3, maxiter, required_residual);
+		draw_picture(pic, L"img/two_circles_and_line_3_step_" + to_wstring(i) + L"_4lab_numeric", pic_size);
+	}
+
+	partial_derivative_step = 1e-9;
 
 	auto make_images = [&](bool is_numeric, wstring append) {
 		/*{
@@ -354,9 +384,8 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		}*/
 
 		auto draw_three_lines = [&](int no, const sqr_f& sq) {
-			//vec2 a(0.5, 0.5), b(3, 1), c(-1, 3);
 			vec2 a(0, 0), b(1, 2), c(3, 1);
-			Picture_three_lines pic(a, b, c, { -3, -3 }, is_numeric, sq, 100, 1e-10);
+			Picture_three_lines pic(a, b, c, { -3, -3 }, is_numeric, sq, maxiter, required_residual);
 			draw_picture(pic, L"img/three_lines_4lab_" + to_wstring(no) + append, pic_size);
 		};
 
@@ -366,19 +395,19 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 		{
 			vec2 a(0.5, 0.5), b(3, 1), c(-1, 3);
-			Picture_three_lines pic(a, b, c, { -3, -3 }, is_numeric, composition(square_cast_3, square_cast_mul({1, 1, 10})), 100, 1e-10);
+			Picture_three_lines pic(a, b, c, { -3, -3 }, is_numeric, composition(square_cast_3, square_cast_mul({1, 1, 10})), 100, required_residual);
 			draw_picture(pic, L"img/three_lines_4lab_3_weight" + append, pic_size);
 		}
 
 		{
 			vec2 a(2, 2);
-			Picture_sin_and_line pic(a, { -1, 1 }, is_numeric, square_cast_none, 100, 1e-10);
+			Picture_sin_and_line pic(a, { -1, 1 }, is_numeric, square_cast_none, maxiter, required_residual);
 			draw_picture(pic, L"img/sin_and_line_4lab" + append, pic_size);
 		}
 
 		{
 			circle a(0, 0, 1), b(1, 0.7, 1.2); // Пересекаются в двух точках
-			Picture_two_circles pic(a, b, { -1, 0.5 }, is_numeric, square_cast_none, 100, 1e-10);
+			Picture_two_circles pic(a, b, { -1, 0.5 }, is_numeric, square_cast_none, maxiter, required_residual);
 			draw_picture(pic, L"img/two_circles_1_4lab" + append, pic_size);
 		}
 
@@ -386,32 +415,32 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 			circle a(0, 0, 0.8), b(sqrt(2.0) / 2, sqrt(2.0) / 2, 0.2); // Пересекаются в одной точке
 			{
 				// Начальное приближение лежит на оси симметрии
-				Picture_two_circles pic(a, b, { 0.156405, 0.974966 }, is_numeric, square_cast_none, 100, 1e-10);
-				draw_picture(pic, L"img/two_circles_2.1_4lab" + append, pic_size);
+				Picture_two_circles pic(a, b, { 0.156405, 0.974966 }, is_numeric, square_cast_none, maxiter, required_residual);
+				draw_picture(pic, L"img/two_circles_2_1_4lab" + append, pic_size);
 			}
 			{
 				// Начальное приближение лежит на линии, соединяющей центры окружностей
-				Picture_two_circles pic(a, b, { -sqrt(2.0), -sqrt(2.0)+0.01 }, is_numeric, square_cast_none, 100, 1e-10);
-				draw_picture(pic, L"img/two_circles_2.2_4lab" + append, pic_size);
+				Picture_two_circles pic(a, b, { -sqrt(2.0), -sqrt(2.0)+0.01 }, is_numeric, square_cast_none, maxiter, required_residual);
+				draw_picture(pic, L"img/two_circles_2_2_4lab" + append, pic_size);
 			}
 			{
 				// Начальное приближение лежит в центре одной из окружностей
-				Picture_two_circles pic(a, b, { b.c.x, b.c.y + 0.01 }, is_numeric, square_cast_none, 100, 1e-10);
-				draw_picture(pic, L"img/two_circles_2.3_4lab" + append, pic_size);
+				Picture_two_circles pic(a, b, { b.c.x, b.c.y + 0.01 }, is_numeric, square_cast_none, maxiter, required_residual);
+				draw_picture(pic, L"img/two_circles_2_3_4lab" + append, pic_size);
 			}
 		}
 
 		{
 			circle a(0, 0, 0.8), b(1, 0.7, 0.3); // Не пересекаются
-			Picture_two_circles pic(a, b, { -1, 0.5 }, is_numeric, square_cast_none, 100, 1e-10);
+			Picture_two_circles pic(a, b, { -1, 0.5 }, is_numeric, square_cast_none, maxiter, required_residual);
 			draw_picture(pic, L"img/two_circles_3_4lab" + append, pic_size);
 		}
 
 		auto draw_two_circles_and_line = [&](int no, const sqr_f& sq) {
 			circle a(0, 0, 0.8), b(sqrt(2.0) / 2, sqrt(2.0) / 2, 0.2);
 			line c = { point(sqrt(2.0)*(1.0 / 2.0 - 0.1), sqrt(2.0)*(1.0 / 2.0 - 0.1)), point(-1, 0) };
-			Picture_two_circles_and_line pic(a, b, c, { -1, 0.5 }, is_numeric, sq, 100, 1e-10);
-			draw_picture(pic, L"img/two_circles_and_line_4lab_" + to_wstring(no) + append, pic_size);
+			Picture_two_circles_and_line pic(a, b, c, { -1, 0.5 }, is_numeric, sq, maxiter, required_residual);
+			draw_picture(pic, L"img/two_circles_and_line_" + to_wstring(no) + L"_4lab" + append, pic_size);
 		};
 
 		draw_two_circles_and_line(2, square_cast_2);
@@ -420,7 +449,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 		{
 			circle a(0, 0, 1);
-			Picture_one_circle pic(a, { 0.2, 0.5 }, is_numeric, square_cast_1, 100, 1e-10);
+			Picture_one_circle pic(a, { 0.2, 0.5 }, is_numeric, square_cast_1, maxiter, required_residual);
 			draw_picture(pic, L"img/one_circle_4lab_1" + append, pic_size);
 		}
 	};

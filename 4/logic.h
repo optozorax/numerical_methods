@@ -36,6 +36,7 @@ void solve_gauss(const matrix_t& a, const xn_t& b, xn_t& dx);
 void mul_t(const matrix_t& a, const matrix_t& b, matrix_t& result);
 void mul_t(const matrix_t& a, const xn_t& b, xn_t& result);
 
+extern double partial_derivative_step;
 double calc_partial_derivative_numeric(const fn_f& f, const xn_t& x, int i);
 matrix_t calc_jacobi_matrix_numeric(const fnmv_f& f, const xn_t& x);
 jnm_f calc_jacobi_matrix_numeric_functon(const fnmv_f& f);

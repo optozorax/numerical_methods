@@ -1,0 +1,10 @@
+k	beta	residual	x	y
+1	1.00e+00	2.61e-16	1.2352941176	1.2941176471
+# x_0 = (-3.0000000000, -3.0000000000)
+# max_iter = 30
+# required residual = 1.00e-10
+
+# Exit by residual
+# iter = 1
+# Residual = 2.61e-16
+# Result point = (1.2352941176, 1.2941176471)

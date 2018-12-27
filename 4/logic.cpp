@@ -126,10 +126,11 @@ ostream& operator<<(ostream& out, const xn_t& v) {
 }
 
 //-----------------------------------------------------------------------------
+double partial_derivative_step = 1e-9;
 double calc_partial_derivative_numeric(const fn_f& f, const xn_t& x_in, int i) {
 	myassert(i < x_in.size());
 
-	double step = 1;
+	double step = partial_derivative_step;
 	if (x_in[i] != 0)
 		step = x_in[i]*step;
 
