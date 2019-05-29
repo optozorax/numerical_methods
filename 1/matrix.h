@@ -8,16 +8,16 @@
 class Matrix
 {
 public:
-	Matrix(int n = 0, int m = 0, real fill = 0); // n - количество столбцов, m - количество строк
+	Matrix(int n = 0, int m = 0, myreal fill = 0); // n - количество столбцов, m - количество строк
 	void loadFromFile(std::string fileName);
 	void saveToFile(std::string fileName) const;
 
 	void save(std::ostream& out) const;
 	void load(std::istream& in);
 
-	void getFromVector(int n, int m, const std::vector<real>& data);
+	void getFromVector(int n, int m, const std::vector<myreal>& data);
 
-	void resize(int n, int m, real fill = 0);
+	void resize(int n, int m, myreal fill = 0);
 	void negate(void);
 
 	bool isSymmetric(void) const;
@@ -27,14 +27,14 @@ public:
 	bool isDiagonalIdentity(void) const;
 	bool isDegenerate(void) const;
 
-	real& operator()(int i, int j);
-	const real& operator()(int i, int j) const;
+	myreal& operator()(int i, int j);
+	const myreal& operator()(int i, int j) const;
 
 	int width(void) const;
 	int height(void) const;
 
 private:
-	std::vector<std::vector<real>> m_matrix;
+	std::vector<std::vector<myreal>> m_matrix;
 	int m_n, m_m;
 };
 
@@ -42,14 +42,14 @@ private:
 void generateSparseSymmetricMatrix(
 	int n,
 	int min, int max, 
-	real percent,
+	myreal percent,
 	Matrix& result
 );
 
 void generateLMatrix(
 	int n,
 	int min, int max,
-	real percent,
+	myreal percent,
 	Matrix& result
 );
 

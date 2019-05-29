@@ -58,8 +58,8 @@ public:
 class MatrixDiagonal
 {
 public:
-	typedef std::vector<real>::iterator iterator;
-	typedef std::vector<real>::const_iterator const_iterator;
+	typedef std::vector<myreal>::iterator iterator;
+	typedef std::vector<myreal>::const_iterator const_iterator;
 
 	//-------------------------------------------------------------------------
 	MatrixDiagonal();
@@ -91,7 +91,7 @@ public:
 	const_iterator end(int diagNo) const;
 
 private:
-	std::vector<std::vector<real>> di;
+	std::vector<std::vector<myreal>> di;
 	std::vector<int> fi;
 	int n;
 	Diagonal dc;

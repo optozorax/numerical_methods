@@ -165,7 +165,7 @@ void MatrixDiagonal::resize(int n1, std::vector<int> format) {
 
 	di.clear();
 	for (const auto& i : format)
-		di.push_back(std::vector<real>(dc.calcDiagonalSize(i), 0));
+		di.push_back(std::vector<myreal>(dc.calcDiagonalSize(i), 0));
 }
 
 //-----------------------------------------------------------------------------
@@ -565,13 +565,13 @@ IterationsResult SolverSLAE_Iterative::iteration_process(const MatrixDiagonal& a
 		throw std::exception();
 
 	// Считаем норму матрицы: ее максимальный элемент по модулю
-	real yNorm = calcNorm(y);
+	myreal yNorm = calcNorm(y);
 	x1.resize(y.size());
 	x = start;
 
 	// Цикл по итерациям
 	int i = 0;
-	real relativeResidual = epsilon + 1;
+	myreal relativeResidual = epsilon + 1;
 	for (; i < maxIterations && relativeResidual > epsilon; ++i) {
 		// Итерационный шаг
 		step(this, a, y, x);

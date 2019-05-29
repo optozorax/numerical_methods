@@ -1,17 +1,17 @@
 #pragma once
 
 #ifdef ALL_FLOAT
-typedef float real;
+typedef float myreal;
 typedef float sumreal;
 #endif
 
 #ifdef ALL_DOUBLE
-typedef double real;
+typedef double myreal;
 typedef double sumreal;
 #endif
 
 #ifdef ALL_FLOAT_WITH_DOUBLE
-typedef float real;
+typedef float myreal;
 typedef double sumreal;
 #endif
 
@@ -19,7 +19,7 @@ typedef double sumreal;
 #ifndef ALL_DOUBLE
 #ifndef ALL_FLOAT_WITH_DOUBLE
 #error "Type isn't defined"
-typedef double real;
+typedef double myreal;
 typedef double sumreal;
 #endif
 #endif

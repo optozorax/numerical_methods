@@ -3,7 +3,7 @@
 #include "matrix.h"
 
 //-----------------------------------------------------------------------------
-Matrix::Matrix(int n, int m, real fill) : m_matrix(m, std::vector<real>(n, fill)), m_n(n), m_m(m) {
+Matrix::Matrix(int n, int m, myreal fill) : m_matrix(m, std::vector<myreal>(n, fill)), m_n(n), m_m(m) {
 }
 
 //-----------------------------------------------------------------------------
@@ -27,8 +27,8 @@ void Matrix::loadFromFile(std::string fileName) {
 void Matrix::saveToFile(std::string fileName) const {
 	std::ofstream fout(fileName);
 
-	fout.precision(std::numeric_limits<real>::digits10);
-	int w = std::numeric_limits<real>::digits10 + 4;
+	fout.precision(std::numeric_limits<myreal>::digits10);
+	int w = std::numeric_limits<myreal>::digits10 + 4;
 	save(fout);
 
 	fout.close();
@@ -60,19 +60,19 @@ void Matrix::save(std::ostream& out) const {
 
 
 //-----------------------------------------------------------------------------
-void Matrix::getFromVector(int n, int m, const std::vector<real>& data) {
+void Matrix::getFromVector(int n, int m, const std::vector<myreal>& data) {
 	resize(n, m);
 	for (int i = 0; i < data.size(); ++i)
 		operator()(i / n, i % n) = data[i];
 }
 
 //-----------------------------------------------------------------------------
-void Matrix::resize(int n, int m, real fill) {
+void Matrix::resize(int n, int m, myreal fill) {
 	if (m_n != n || m_m != m) {
 		m_n = n;
 		m_m = m;
 		m_matrix.clear();
-		m_matrix.resize(m_m, std::vector<real>(m_n, fill));
+		m_matrix.resize(m_m, std::vector<myreal>(m_n, fill));
 	}
 }
 
@@ -92,8 +92,8 @@ bool Matrix::isSymmetric(void) const {
 
 	for (int i = 0; i < height(); ++i) {
 		for (int j = 0; j <= i; ++j) {
-			const real& a = operator()(i, j);
-			const real& b = operator()(j, i);
+			const myreal& a = operator()(i, j);
+			const myreal& b = operator()(j, i);
 			if (!isNear(a, b))
 				return false;
 		}
@@ -167,12 +167,12 @@ bool Matrix::isDegenerate(void) const {
 }
 
 //-----------------------------------------------------------------------------
-real& Matrix::operator()(int i, int j) {
+myreal& Matrix::operator()(int i, int j) {
 	return m_matrix[i][j];
 }
 
 //-----------------------------------------------------------------------------
-const real& Matrix::operator()(int i, int j) const {
+const myreal& Matrix::operator()(int i, int j) const {
 	return m_matrix[i][j];
 }
 
@@ -191,7 +191,7 @@ int Matrix::height(void) const {
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
-void generateSparseSymmetricMatrix(int n, int min, int max, real percent, Matrix& result) {
+void generateSparseSymmetricMatrix(int n, int min, int max, myreal percent, Matrix& result) {
 	result.resize(n, n, 0);
 
 	int count = percent * n * n;
@@ -208,7 +208,7 @@ void generateSparseSymmetricMatrix(int n, int min, int max, real percent, Matrix
 }
 
 //-----------------------------------------------------------------------------
-void generateLMatrix(int n, int min, int max, real percent, Matrix& result) {
+void generateLMatrix(int n, int min, int max, myreal percent, Matrix& result) {
 	result.resize(n, n, 0);
 
 	int count = percent * n * n / 2;
@@ -293,7 +293,7 @@ bool mul(const Matrix& a, const Matrix& b, Matrix& result) {
 
 	for (int i = 0; i < b.width(); ++i) {
 		for (int j = 0; j < a.height(); ++j) {
-			real sum = 0;
+			myreal sum = 0;
 			for (int k = 0; k < a.width(); ++k) {
 				sum += a(j, k) * b(k, i);
 			}
@@ -360,7 +360,7 @@ bool calcLUsq(const Matrix& a, Matrix& l, Matrix& u) {
 	for (int i = 0; i < a.height(); ++i) {
 		// Считаем элементы матрицы L
 		for (int j = 0; j < i; ++j) {
-			real sum = 0;
+			myreal sum = 0;
 			for (int k = 0; k < j; ++k)
 				sum += l(i, k) * u(k, j);
 
@@ -369,7 +369,7 @@ bool calcLUsq(const Matrix& a, Matrix& l, Matrix& u) {
 
 		// Считаем элементы матрицы U
 		for (int j = 0; j < i; ++j) {
-			real sum = 0;
+			myreal sum = 0;
 			for (int k = 0; k < j; ++k)
 				sum += l(j, k) * u(k, i);
 
@@ -377,7 +377,7 @@ bool calcLUsq(const Matrix& a, Matrix& l, Matrix& u) {
 		}
 
 		// Считаем диагональный элемент
-		real sum = 0;
+		myreal sum = 0;
 		for (int k = 0; k < i; ++k)
 			sum += l(i, k) * u(k, i);
 
@@ -399,7 +399,7 @@ bool calcLUsq_partial(const Matrix& a, Matrix& l, Matrix& u) {
 	for (int i = 0; i < a.height(); ++i) {
 		// Считаем элементы матрицы L
 		for (int j = 0; j < i; ++j) if (a(i, j) != 0) {
-			real sum = 0;
+			myreal sum = 0;
 			for (int k = 0; k < j; ++k)
 				sum += l(i, k) * u(k, j);
 
@@ -408,7 +408,7 @@ bool calcLUsq_partial(const Matrix& a, Matrix& l, Matrix& u) {
 
 		// Считаем элементы матрицы U
 		for (int j = 0; j < i; ++j) if (a(j, i) != 0) {
-			real sum = 0;
+			myreal sum = 0;
 			for (int k = 0; k < j; ++k)
 				sum += l(j, k) * u(k, i);
 
@@ -416,7 +416,7 @@ bool calcLUsq_partial(const Matrix& a, Matrix& l, Matrix& u) {
 		}
 
 		// Считаем диагональный элемент
-		real sum = 0;
+		myreal sum = 0;
 		for (int k = 0; k < i; ++k)
 			sum += l(i, k) * u(k, i);
 
@@ -439,7 +439,7 @@ bool calcLDL(const Matrix& a, Matrix& l, Matrix& d) {
 	for (int i = 0; i < a.height(); ++i) {
 		// Считаем элементы матрицы L
 		for (int j = 0; j < i; ++j) {
-			real sum = 0;
+			myreal sum = 0;
 			for (int k = 0; k < j; ++k)
 				sum += d(k, k) * l(j, k) * l(i, k);
 
@@ -451,7 +451,7 @@ bool calcLDL(const Matrix& a, Matrix& l, Matrix& d) {
 
 		// Считаем диагональный элемент
 		{
-			real sum = 0;
+			myreal sum = 0;
 			for (int j = 0; j < i; ++j)
 				sum += d(j, j) * l(i, j) * l(i, j);
 			d(i, i) = a(i, i) - sum;
@@ -473,7 +473,7 @@ bool calcGaussianReverseOrder(const Matrix& l, const Matrix& y, Matrix& x) {
 	x.resize(1, y.height());
 
 	for (int i = x.height() - 1; i >= 0; --i) {
-		real sum = 0;
+		myreal sum = 0;
 		for (int j = i; j < x.height(); ++j)
 			sum += l(j, i) * x(j, 0);
 		x(i, 0) = y(i, 0) - sum;
@@ -491,7 +491,7 @@ bool calcGaussianFrontOrder(const Matrix& l, const Matrix& y, Matrix& x) {
 	x.resize(1, y.height());
 
 	for (int i = 0; i < x.height(); ++i) {
-		real sum = 0;
+		myreal sum = 0;
 		for (int j = 0; j < i; ++j)
 			sum += l(i, j) * x(j, 0);
 		x(i, 0) = y(i, 0) - sum;
@@ -559,7 +559,7 @@ bool solveSLAE_byGaussMethod(const Matrix& a1, const Matrix& y1, Matrix& x1) {
 
 		// Перебираем все строчки ниже и отнимаем текущую строчку от них
 		for (int j = i+1; j < a.height(); ++j) {
-			real m = a(j, i) / a(i, i);
+			myreal m = a(j, i) / a(i, i);
 			for (int k = i; k < a.width(); ++k)
 				a(j, k) -= m * a(i, k);
 			y(j, 0) -= m * y(i, 0);

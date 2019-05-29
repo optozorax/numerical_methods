@@ -10,7 +10,7 @@ class Vector
 {
 public:
 	Vector();
-	Vector(int size, real fill = 0);
+	Vector(int size, myreal fill = 0);
 	Vector(const Matrix& a);
 
 	void loadFromFile(std::string fileName);
@@ -23,7 +23,7 @@ public:
 	void generate(int n);
 
 	//-------------------------------------------------------------------------
-	void resize(int n, real fill = 0);
+	void resize(int n, myreal fill = 0);
 
 	void negate(void);
 
@@ -34,15 +34,15 @@ public:
 	//-------------------------------------------------------------------------
 	int size(void) const;
 	
-	real& operator()(int i);
-	const real& operator()(int i) const;
+	myreal& operator()(int i);
+	const myreal& operator()(int i) const;
 
 private:
-	std::vector<real> mas;
+	std::vector<myreal> mas;
 };
 
 //-----------------------------------------------------------------------------
 sumreal sumAllElementsAbs(const Vector& a);
 bool sum(const Vector& a, const Vector& b, Vector& result);
 bool mul(const Matrix& a, const Vector& b, Vector& result);
-real calcNorm(const Vector& a);
+myreal calcNorm(const Vector& a);

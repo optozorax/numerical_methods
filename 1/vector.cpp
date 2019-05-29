@@ -8,7 +8,7 @@ Vector::Vector() {
 }
 
 //-----------------------------------------------------------------------------
-Vector::Vector(int size, real fill) : mas(size, fill) {
+Vector::Vector(int size, myreal fill) : mas(size, fill) {
 }
 
 //-----------------------------------------------------------------------------
@@ -48,7 +48,7 @@ void Vector::loadFromFile(std::string fileName) {
 //-----------------------------------------------------------------------------
 void Vector::saveToFile(std::string fileName) const {
 	std::ofstream fout(fileName);
-	fout.precision(std::numeric_limits<real>::digits10);
+	fout.precision(std::numeric_limits<myreal>::digits10);
 	save(fout);
 	fout.close();
 }
@@ -71,7 +71,7 @@ void Vector::load(std::istream& in) {
 }
 
 //-----------------------------------------------------------------------------
-void Vector::resize(int n, real fill) {
+void Vector::resize(int n, myreal fill) {
 	if (mas.size() != n)
 		mas.resize(n, fill);
 }
@@ -108,12 +108,12 @@ int Vector::size(void) const {
 }
 
 //-----------------------------------------------------------------------------
-real& Vector::operator()(int i) {
+myreal& Vector::operator()(int i) {
 	return mas[i];
 }
 
 //-----------------------------------------------------------------------------
-const real& Vector::operator()(int i) const {
+const myreal& Vector::operator()(int i) const {
 	return mas[i];
 }
 
@@ -163,7 +163,7 @@ bool mul(const Matrix& a, const Vector& b, Vector& result) {
 }
 
 //-----------------------------------------------------------------------------
-real calcNorm(const Vector& a) {
+myreal calcNorm(const Vector& a) {
 	sumreal sum = 0;
 	for (int i = 0; i < a.size(); ++i)
 		sum += a(i) * a(i);
