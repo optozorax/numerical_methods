@@ -55,8 +55,8 @@ void MatrixProfileSymmetric::loadFromFile(std::string fileName) {
 void MatrixProfileSymmetric::saveToFile(std::string fileName) const {
 	std::ofstream fout(fileName);
 
-	fout.precision(std::numeric_limits<real>::max_digits10);
-	int w = std::numeric_limits<real>::digits10 + 6;
+	fout.precision(std::numeric_limits<myreal>::max_digits10);
+	int w = std::numeric_limits<myreal>::digits10 + 6;
 
 	fout << di.size() << std::endl;
 	for (const auto& i : di)
@@ -121,12 +121,12 @@ int MatrixProfileSymmetric::size(void) const {
 }
 
 //-----------------------------------------------------------------------------
-real& MatrixProfileSymmetric::getDiagonalElement(int n) {
+myreal& MatrixProfileSymmetric::getDiagonalElement(int n) {
 	return di[n];
 }
 
 //-----------------------------------------------------------------------------
-const real& MatrixProfileSymmetric::getDiagonalElement(int n) const {
+const myreal& MatrixProfileSymmetric::getDiagonalElement(int n) const {
 	return di[n];
 }
 
@@ -141,22 +141,22 @@ int MatrixProfileSymmetric::getLineSize(int lineNo) const {
 }
 
 //-----------------------------------------------------------------------------
-real& MatrixProfileSymmetric::getLineElement(int lineNo, int elemNo) {
+myreal& MatrixProfileSymmetric::getLineElement(int lineNo, int elemNo) {
 	return al[ai[lineNo] + elemNo];
 }
 
 //-----------------------------------------------------------------------------
-const real& MatrixProfileSymmetric::getLineElement(int lineNo, int elemNo) const {
+const myreal& MatrixProfileSymmetric::getLineElement(int lineNo, int elemNo) const {
 	return al[ai[lineNo] + elemNo];
 }
 
 //-----------------------------------------------------------------------------
-std::vector<real>::iterator MatrixProfileSymmetric::getLineFirstElement(int lineNo) {
+std::vector<myreal>::iterator MatrixProfileSymmetric::getLineFirstElement(int lineNo) {
 	return al.begin() + ai[lineNo];
 }
 
 //-----------------------------------------------------------------------------
-std::vector<real>::const_iterator MatrixProfileSymmetric::getLineFirstElement(int lineNo) const {
+std::vector<myreal>::const_iterator MatrixProfileSymmetric::getLineFirstElement(int lineNo) const {
 	return al.begin() + ai[lineNo];
 }
 
@@ -182,7 +182,7 @@ bool mul(const MatrixProfileSymmetric& a, const Vector& x, Vector& y) {
 
 		int j = iLineStart;
 		for (int k = 0; k < iLineSize; ++j, ++k) {
-			real elem = a.getLineElement(i, k);
+			myreal elem = a.getLineElement(i, k);
 			y(i) += elem * x(j);
 			y(j) += elem * x(i);
 		}
@@ -198,7 +198,7 @@ bool mul(const MatrixProfileSymmetric& a, const Vector& x, Vector& y) {
 //-----------------------------------------------------------------------------
 void calcLDL(MatrixProfileSymmetric& a_l) {
 	// Типо обращение к диагональному элементу
-	auto d = [&a_l] (int i) -> real& {
+	auto d = [&a_l] (int i) -> myreal& {
 		return a_l.getDiagonalElement(i);
 	};
 
@@ -212,7 +212,7 @@ void calcLDL(MatrixProfileSymmetric& a_l) {
 
 		// Считаем элементы матрицы L
 		for (int j = iLineStart; j < i; ++j) {
-			real& currentElem = a_l.getLineElement(i, j - iLineStart);
+			myreal& currentElem = a_l.getLineElement(i, j - iLineStart);
 
 			int jLineStart = a_l.getLineFirstElementPos(j);
 			int jLineSize = a_l.getLineSize(j);

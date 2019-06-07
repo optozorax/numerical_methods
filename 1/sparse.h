@@ -27,23 +27,23 @@ public:
 	//-------------------------------------------------------------------------
 	int size(void) const;
 
-	real& getDiagonalElement(int n);
-	const real& getDiagonalElement(int n) const;
+	myreal& getDiagonalElement(int n);
+	const myreal& getDiagonalElement(int n) const;
 
 	//-------------------------------------------------------------------------
 	int getLineFirstElementPos(int lineNo) const;
 	int getLineSize(int lineNo) const;
 
 	// Нумерация начинается с 0, но дается элемент с индексом в плотной матрице как getLineFirstElementPos
-	real& getLineElement(int lineNo, int elemNo);
-	const real& getLineElement(int lineNo, int elemNo) const;
+	myreal& getLineElement(int lineNo, int elemNo);
+	const myreal& getLineElement(int lineNo, int elemNo) const;
 
-	std::vector<real>::iterator getLineFirstElement(int lineNo);
-	std::vector<real>::const_iterator getLineFirstElement(int lineNo) const;
+	std::vector<myreal>::iterator getLineFirstElement(int lineNo);
+	std::vector<myreal>::const_iterator getLineFirstElement(int lineNo) const;
 
 private:
-	std::vector<real> di;
-	std::vector<real> al;
+	std::vector<myreal> di;
+	std::vector<myreal> al;
 	std::vector<int> ai;
 };
 
